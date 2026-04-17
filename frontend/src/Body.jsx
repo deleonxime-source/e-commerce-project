@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import api from '../api';
 
 const Home = () => {
   const [products, setProducts] = useState([]);
