@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
+import axios from "axios";
+
+const api = axios.create({
+  baseURL: import.meta.env.VITE_BACKEND_URL,
+});
+
 const Home = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
