@@ -12,7 +12,5 @@ const config = {
 };
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <AuthProvider config={config}>
     <App />
-  </AuthProvider>
 );
