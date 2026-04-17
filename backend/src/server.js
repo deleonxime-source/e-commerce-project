@@ -266,4 +266,8 @@ app.get('/api/categories', async (req, res, next) => {
 
 app.use(errorHandler);
 
-export default app;
+const PORT = process.env.PORT || 5001;
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
