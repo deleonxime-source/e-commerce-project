@@ -28,10 +28,8 @@ const sequelize = new Sequelize(
           },
         }
       : undefined,
-    define: {
-      schema: DB_SCHEMA,
-    },
-  });
+  }
+);
 
 // Helper for running SQL queries with a return shape similar to pg.
 async function query(text, params) {
