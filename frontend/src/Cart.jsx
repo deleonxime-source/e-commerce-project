@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import api from '../api/api.js';
+import api from '../Body.jsx';
 
 function Cart() {
   const [items, setItems] = useState([]);

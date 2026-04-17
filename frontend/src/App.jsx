@@ -1,34 +1,21 @@
-import { Routes, Route, Link } from 'react-router-dom';
-import Home from './pages/Home.jsx';
-import ProductDetail from './pages/ProductDetail.jsx';
-import Cart from './pages/Cart.jsx';
-import AdminDashboard from './pages/AdminDashboard.jsx';
-import SignIn from './pages/SignIn.jsx';
+import React from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import Body from "./Body.jsx";
+import Footer from "./Footer.jsx";
 
-function App() {
+const App = () => {
   return (
-    <div className="app-shell">
-      <header className="topbar">
-        <div className="brand">Ecommerce Shop</div>
-        <nav>
-          <Link to="/">Home</Link>
-          <Link to="/cart">Cart</Link>
-          <Link to="/admin">Admin</Link>
-          <Link to="/signin">Sign In</Link>
-        </nav>
-      </header>
-
-      <main className="content">
+    <>
+      <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/product/:id" element={<ProductDetail />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/signin" element={<SignIn />} />
+          <Route path="/" element={<Body />} />
         </Routes>
-      </main>
-    </div>
+      </BrowserRouter>
+
+      <Footer />
+    </>
   );
-}
+};
 
 export default App;
+
