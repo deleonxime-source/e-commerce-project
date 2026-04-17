@@ -3,14 +3,35 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { Sequelize } from 'sequelize';
 
-// Load environment variables from .env before configuring services.
 dotenv.config();
 
-// Sequelize instance for PostgreSQL (MVP uses raw SQL through sequelize.query).
-const sequelize = new Sequelize(process.env.DATABASE_URL, {
-  dialect: 'postgres',
-  logging: false,
-});
+const DB_SCHEMA = process.env.DB_SCHEMA || "app";
+const useSsl = process.env.PGSSLMODE === "require";
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+const sequelize = new Sequelize(
+  process.env.DB_NAME,
+  process.env.DB_USER,
+  process.env.DB_PASSWORD,
+  {
+    host: process.env.DB_HOST,
+    port: Number(process.env.DB_PORT) || 5432,
+    dialect: "postgres",
+    dialectOptions: useSsl
+      ? {
+          ssl: {
+            require: true,
+            rejectUnauthorized: false,
+          },
+        }
+      : undefined,
+    define: {
+      schema: DB_SCHEMA,
+    },
+  });
 
 // Helper for running SQL queries with a return shape similar to pg.
 async function query(text, params) {
@@ -70,6 +91,10 @@ function errorHandler(err, req, res, next) {
     details: process.env.NODE_ENV === 'development' ? err.stack : undefined,
   });
 }
+
+app.get("/", (req, res) => {
+  res.send("Hello World!");
+});
 
 // Build and configure the Express app.
 const app = express();
