@@ -253,10 +253,17 @@ app.get('/api/orders', async (req, res, next) => {
   }
 });
 
+
+app.get('/api/categories', async (req, res, next) => {
+  try {
+    const result = await query('SELECT * FROM categories ORDER BY id');
+    res.json(result.rows);
+  } catch (err) {
+    next(err);
+  }
+});
+
+
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 5001;
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+export default app;
