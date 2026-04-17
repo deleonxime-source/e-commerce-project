@@ -15,19 +15,18 @@ const Body = () => {
   const [error, setError] = useState("");
 
   const fetchProducts = async () => {
-  try {
-    const res = await api.get("/products");
-    console.log("PRODUCTS RESPONSE:", res.data);  
-    setProducts(res.data);
-  } catch {
-    setError("Failed to load products");
-  }
-};
-
+    try {
+      const res = await api.get("/api/products");
+      console.log("PRODUCTS RESPONSE:", res.data);
+      setProducts(res.data);
+    } catch {
+      setError("Failed to load products");
+    }
+  };
 
   const fetchCategories = async () => {
     try {
-      const res = await api.get("/categories");
+      const res = await api.get("/api/categories");
       setCategories(res.data);
     } catch (err) {
       console.error("Failed to load categories", err);
