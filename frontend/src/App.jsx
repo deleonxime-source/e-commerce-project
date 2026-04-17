@@ -1,6 +1,7 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Footer from "./Footer.jsx";
+import Body from "./Body.jsx";
 
 const App = () => {
   return (
