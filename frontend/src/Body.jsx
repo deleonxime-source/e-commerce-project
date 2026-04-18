@@ -1,6 +1,42 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from './api/api.js';
+import { getLocalProductImageUrls } from './utils/productImages.js';
+
+function ProductCardImage({ product, index }) {
+  const localMainImage = getLocalProductImageUrls(product.id)[0] || '';
+  const fallbackImage = product.image_url || '';
+  const [src, setSrc] = useState(localMainImage || fallbackImage);
+  const [showPlaceholder, setShowPlaceholder] = useState(!localMainImage && !fallbackImage);
+
+  useEffect(() => {
+    setSrc(localMainImage || fallbackImage);
+    setShowPlaceholder(!localMainImage && !fallbackImage);
+  }, [localMainImage, fallbackImage]);
+
+  if (showPlaceholder) {
+    return (
+      <div className="product-card__image--placeholder">
+        <span className="product-card__ref">{String(index + 1).padStart(3, '0')}</span>
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={src}
+      alt={product.name}
+      onError={() => {
+        if (fallbackImage && src !== fallbackImage) {
+          setSrc(fallbackImage);
+          return;
+        }
+
+        setShowPlaceholder(true);
+      }}
+    />
+  );
+}
 
 const Home = () => {
   const [products, setProducts] = useState([]);
@@ -152,15 +188,7 @@ const Home = () => {
             className="product-card"
           >
             <div className="product-card__image">
-              {product.image_url ? (
-                <img src={product.image_url} alt={product.name} />
-              ) : (
-                <div className="product-card__image--placeholder">
-                  <span className="product-card__ref">
-                    {String(index + 1).padStart(3, '0')}
-                  </span>
-                </div>
-              )}
+              <ProductCardImage product={product} index={index} />
               {product.stock === 0 && (
                 <span className="product-card__sold-out">Sold Out</span>
               )}
