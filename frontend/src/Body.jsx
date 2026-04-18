@@ -1,11 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-
-import axios from "axios";
-
-const api = axios.create({
-  baseURL: import.meta.env.VITE_BACKEND_URL,
-});
+import api from './api/api.js';
 
 const Home = () => {
   const [products, setProducts] = useState([]);
@@ -16,9 +11,10 @@ const Home = () => {
   const fetchProducts = async () => {
     try {
       const res = await api.get('/api/products');
-      setProducts(res.data);
+      setProducts(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error('Failed to fetch products', err);
+      setProducts([]);
     } finally {
       setLoading(false);
     }
@@ -27,9 +23,10 @@ const Home = () => {
   const fetchCategories = async () => {
     try {
       const res = await api.get('/api/categories');
-      setCategories(res.data);
+      setCategories(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error('Failed to fetch categories', err);
+      setCategories([]);
     }
   };
 
@@ -38,7 +35,7 @@ const Home = () => {
     fetchCategories();
   }, []);
 
-  const filtered = selectedCategory
+  const filteredProducts = selectedCategory
     ? products.filter((p) => p.category_id === selectedCategory)
     : products;
 
@@ -144,11 +141,11 @@ const Home = () => {
           <p className="grid-message">Loading...</p>
         )}
 
-        {!loading && filtered.length === 0 && (
+        {!loading && filteredProducts.length === 0 && (
           <p className="grid-message">No products found.</p>
         )}
 
-        {!loading && filtered.map((product, index) => (
+        {!loading && filteredProducts.map((product, index) => (
           <Link
             to={`/products/${product.id}`}
             key={product.id}

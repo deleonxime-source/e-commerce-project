@@ -9,6 +9,9 @@ const App = () => {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Body />} />
+          <Route path="/products" element={<Body />} />
+          <Route path="/products/:id" element={<Body />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
 

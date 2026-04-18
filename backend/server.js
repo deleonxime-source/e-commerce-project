@@ -1,35 +1,161 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { Sequelize } from 'sequelize';
+import { DataTypes, Sequelize } from 'sequelize';
+import { pathToFileURL } from 'url';
 
 dotenv.config();
 
-const DB_SCHEMA = process.env.DB_SCHEMA || "app";
+const DB_SCHEMA = process.env.DB_SCHEMA || 'public';
 const useSsl = process.env.PGSSLMODE === "require";
+const databaseUrl = (process.env.DATABASE_URL || '').trim();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-const sequelize = new Sequelize(
-  process.env.DB_NAME,
-  process.env.DB_USER,
-  process.env.DB_PASSWORD,
+const sequelize = databaseUrl
+  ? new Sequelize(databaseUrl, {
+      dialect: 'postgres',
+      define: {
+        schema: DB_SCHEMA,
+      },
+    })
+  : new Sequelize(
+      process.env.DB_NAME,
+      process.env.DB_USER,
+      process.env.DB_PASSWORD,
+      {
+        host: process.env.DB_HOST,
+        port: Number(process.env.DB_PORT) || 5432,
+        dialect: 'postgres',
+        dialectOptions: useSsl
+          ? {
+              ssl: {
+                require: true,
+                rejectUnauthorized: false,
+              },
+            }
+          : undefined,
+        define: {
+          schema: DB_SCHEMA,
+        },
+      }
+    );
+
+// Sequelize table definitions.
+const Product = sequelize.define(
+  'Product',
   {
-    host: process.env.DB_HOST,
-    port: Number(process.env.DB_PORT) || 5432,
-    dialect: "postgres",
-    dialectOptions: useSsl
-      ? {
-          ssl: {
-            require: true,
-            rejectUnauthorized: false,
-          },
-        }
-      : undefined,
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    name: { type: DataTypes.TEXT, allowNull: false },
+    description: { type: DataTypes.TEXT, allowNull: true },
+    price: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
+    image_url: { type: DataTypes.TEXT, allowNull: true },
+    stock: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+    created_at: { type: DataTypes.DATE, allowNull: false, defaultValue: Sequelize.fn('NOW') },
+  },
+  { tableName: 'products', timestamps: false }
+);
+
+const Cart = sequelize.define(
+  'Cart',
+  {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    user_id: { type: DataTypes.TEXT, allowNull: false, unique: true },
+    created_at: { type: DataTypes.DATE, allowNull: false, defaultValue: Sequelize.fn('NOW') },
+  },
+  { tableName: 'carts', timestamps: false }
+);
+
+const CartItem = sequelize.define(
+  'CartItem',
+  {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    cart_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: { model: 'carts', key: 'id' },
+      onDelete: 'CASCADE',
+    },
+    product_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: { model: 'products', key: 'id' },
+    },
+    quantity: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 1 },
+  },
+  {
+    tableName: 'cart_items',
+    timestamps: false,
+    indexes: [{ unique: true, fields: ['cart_id', 'product_id'] }],
   }
 );
+
+const Order = sequelize.define(
+  'Order',
+  {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    user_id: { type: DataTypes.TEXT, allowNull: false },
+    shipping_address: { type: DataTypes.TEXT, allowNull: false },
+    status: { type: DataTypes.TEXT, allowNull: false, defaultValue: 'pending' },
+    created_at: { type: DataTypes.DATE, allowNull: false, defaultValue: Sequelize.fn('NOW') },
+  },
+  { tableName: 'orders', timestamps: false }
+);
+
+const OrderItem = sequelize.define(
+  'OrderItem',
+  {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    order_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: { model: 'orders', key: 'id' },
+      onDelete: 'CASCADE',
+    },
+    product_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: { model: 'products', key: 'id' },
+    },
+    quantity: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 1 },
+  },
+  { tableName: 'order_items', timestamps: false }
+);
+
+export async function initDatabase() {
+  await sequelize.authenticate();
+  await sequelize.sync();
+
+  // Seed starter products once for local MVP usage.
+  const count = await Product.count();
+  if (count === 0) {
+    await Product.bulkCreate([
+      {
+        name: 'Classic White Tee',
+        description: 'Soft cotton T-shirt with a clean crewneck.',
+        price: 24.99,
+        image_url: 'https://via.placeholder.com/400x400?text=White+Tee',
+        stock: 50,
+      },
+      {
+        name: 'Blue Denim Jacket',
+        description: 'Structured denim jacket for everyday wear.',
+        price: 79.99,
+        image_url: 'https://via.placeholder.com/400x400?text=Denim+Jacket',
+        stock: 30,
+      },
+      {
+        name: 'Black Skinny Jeans',
+        description: 'Stretch denim with a slim fit.',
+        price: 59.99,
+        image_url: 'https://via.placeholder.com/400x400?text=Skinny+Jeans',
+        stock: 40,
+      },
+    ]);
+  }
+}
 
 // Helper for running SQL queries with a return shape similar to pg.
 async function query(text, params) {
@@ -101,17 +227,16 @@ app.get('/', (req, res) => {
 //   res.json({ user: req.auth });
 // });
 
-// Product routes.
-app.get('/api/products', async (req, res, next) => {
+async function listProducts(req, res, next) {
   try {
     const result = await query('SELECT * FROM products ORDER BY id');
     res.json(result.rows);
   } catch (err) {
     next(err);
   }
-});
+}
 
-app.get('/api/products/:id', async (req, res, next) => {
+async function getProductById(req, res, next) {
   try {
     const { id } = req.params;
     const result = await query('SELECT * FROM products WHERE id = $1', [id]);
@@ -122,7 +247,14 @@ app.get('/api/products/:id', async (req, res, next) => {
   } catch (err) {
     next(err);
   }
-});
+}
+
+// Product routes.
+app.get('/api/products', listProducts);
+app.get('/api/product', listProducts);
+app.get('/api/products/:id', getProductById);
+app.get('/api/product/:id', getProductById);
+app.get('/products/:id', getProductById);
 
 // Auth/admin guard disabled for MVP; restore middleware arguments later.
 app.post('/api/products', async (req, res, next) => {
@@ -257,6 +389,9 @@ app.get('/api/categories', async (req, res, next) => {
     const result = await query('SELECT * FROM categories ORDER BY id');
     res.json(result.rows);
   } catch (err) {
+    if (err?.original?.code === '42P01') {
+      return res.json([]);
+    }
     next(err);
   }
 });
@@ -264,8 +399,22 @@ app.get('/api/categories', async (req, res, next) => {
 
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 5001;
+export async function startServer() {
+  const port = process.env.PORT || 4001;
+  await initDatabase();
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+  return app.listen(port, () => {
+    console.log(`Backend server listening on http://localhost:${port}`);
+  });
+}
+
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  try {
+    await startServer();
+  } catch (err) {
+    console.error('Failed to initialize database:', err);
+    process.exit(1);
+  }
+}
+
+export default app;
