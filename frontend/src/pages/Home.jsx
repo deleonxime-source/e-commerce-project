@@ -26,7 +26,7 @@ function Home() {
   }, []);
 
   return (
-    <div style={{ padding: '2rem', fontFamily: 'sans-serif' }}>
+    <div className="home-test-page">
       <h1>Backend Test Page</h1>
       <p>{status}</p>
       <p>Products returned: {products.length}</p>

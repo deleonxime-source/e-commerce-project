@@ -1,42 +1,35 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from './api/api.js';
-import { getLocalProductImageUrls } from './utils/productImages.js';
+import HeroProductPanel from './components/home/HeroProductPanel.jsx';
+import AnnouncementBar from './components/home/AnnouncementBar.jsx';
+import CategoryFilter from './components/home/CategoryFilter.jsx';
+import ProductCard from './components/products/ProductCard.jsx';
 
-function ProductCardImage({ product, index }) {
-  const localMainImage = getLocalProductImageUrls(product.id)[0] || '';
-  const fallbackImage = product.image_url || '';
-  const [src, setSrc] = useState(localMainImage || fallbackImage);
-  const [showPlaceholder, setShowPlaceholder] = useState(!localMainImage && !fallbackImage);
+const HERO_PRODUCTS = [
+  {
+    tone: 'light',
+    category: 'Outerwear',
+    name: 'Anatomical Jacket',
+    price: '$890',
+    swatchType: 'blocks',
+    swatches: ['hero__swatch-block--stone', 'hero__swatch-block--sand'],
+  },
+  {
+    tone: 'dark',
+    category: 'Knitwear',
+    name: 'Deconstructed Turtleneck',
+    price: '$420',
+    swatchType: 'dots',
+    swatches: ['swatch--white', 'swatch--gold', 'swatch--charcoal'],
+  },
+];
 
-  useEffect(() => {
-    setSrc(localMainImage || fallbackImage);
-    setShowPlaceholder(!localMainImage && !fallbackImage);
-  }, [localMainImage, fallbackImage]);
-
-  if (showPlaceholder) {
-    return (
-      <div className="product-card__image--placeholder">
-        <span className="product-card__ref">{String(index + 1).padStart(3, '0')}</span>
-      </div>
-    );
-  }
-
-  return (
-    <img
-      src={src}
-      alt={product.name}
-      onError={() => {
-        if (fallbackImage && src !== fallbackImage) {
-          setSrc(fallbackImage);
-          return;
-        }
-
-        setShowPlaceholder(true);
-      }}
-    />
-  );
-}
+const ANNOUNCEMENT_ITEMS = [
+  'Free shipping over $300',
+  'Sustainable materials',
+  'Returns within 30 days',
+];
 
 const Home = () => {
   const [products, setProducts] = useState([]);
@@ -91,85 +84,43 @@ const Home = () => {
           </div>
           <div>
             <p className="hero__collection-label">The new collection</p>
-            <Link to="/products" className="hero__cta">
-              <span>Explore</span>
-              <span className="arrow">→</span>
-            </Link>
+            <div className="hero__actions">
+              <Link to="/products" className="hero__cta">
+                <span>Explore</span>
+                <span className="arrow">→</span>
+              </Link>
+              <Link to="/admin" className="hero__cta">
+                <span>Admin</span>
+                <span className="arrow">→</span>
+              </Link>
+            </div>
           </div>
         </div>
 
         <div className="hero__products">
-          <div className="hero__product hero__product--light">
-            <div className="hero__product-header">
-              <div>
-                <p className="hero__product-category hero__product-category--light">
-                  Outerwear
-                </p>
-                <p className="hero__product-name hero__product-name--light">
-                  Anatomical Jacket
-                </p>
-              </div>
-              <p className="hero__product-price hero__product-price--light">
-                $890
-              </p>
-            </div>
-            <div className="hero__swatches">
-              <div className="hero__swatch-block" style={{ background: '#e0ddd8' }} />
-              <div className="hero__swatch-block" style={{ background: '#ccc9c3' }} />
-            </div>
-          </div>
-
-          <div className="hero__product hero__product--dark">
-            <div className="hero__product-header">
-              <div>
-                <p className="hero__product-category hero__product-category--dark">
-                  Knitwear
-                </p>
-                <p className="hero__product-name hero__product-name--dark">
-                  Deconstructed Turtleneck
-                </p>
-              </div>
-              <p className="hero__product-price hero__product-price--dark">
-                $420
-              </p>
-            </div>
-            <div className="colour-swatches">
-              <div className="swatch" style={{ background: '#fff' }} />
-              <div className="swatch" style={{ background: '#c0a882' }} />
-              <div className="swatch" style={{ background: '#555' }} />
-            </div>
-          </div>
+          {HERO_PRODUCTS.map((product) => (
+            <HeroProductPanel
+              key={product.name}
+              tone={product.tone}
+              category={product.category}
+              name={product.name}
+              price={product.price}
+              swatchType={product.swatchType}
+              swatches={product.swatches}
+            />
+          ))}
         </div>
       </section>
 
       {/* Announcement bar */}
-      <div className="announcement-bar">
-        <span className="announcement-bar__item">Free shipping over $300</span>
-        <span className="announcement-bar__sep">◆</span>
-        <span className="announcement-bar__item">Sustainable materials</span>
-        <span className="announcement-bar__sep">◆</span>
-        <span className="announcement-bar__item">Returns within 30 days</span>
-      </div>
+      <AnnouncementBar items={ANNOUNCEMENT_ITEMS} />
 
       {/* Category filter */}
-      <section className="category-filter">
-        <span className="category-filter__label">Filter:</span>
-        <button
-          className={`filter-chip ${!selectedCategory ? 'filter-chip--active' : 'filter-chip--inactive'}`}
-          onClick={() => setSelectedCategory(null)}
-        >
-          All
-        </button>
-        {categories.map((cat) => (
-          <button
-            key={cat.id}
-            className={`filter-chip ${selectedCategory === cat.id ? 'filter-chip--active' : 'filter-chip--inactive'}`}
-            onClick={() => setSelectedCategory(cat.id)}
-          >
-            {cat.name}
-          </button>
-        ))}
-      </section>
+      <CategoryFilter
+        categories={categories}
+        selectedCategory={selectedCategory}
+        onSelectCategory={setSelectedCategory}
+      />
 
       {/* Product grid */}
       <section className="product-grid">
@@ -182,25 +133,7 @@ const Home = () => {
         )}
 
         {!loading && filteredProducts.map((product, index) => (
-          <Link
-            to={`/products/${product.id}`}
-            key={product.id}
-            className="product-card"
-          >
-            <div className="product-card__image">
-              <ProductCardImage product={product} index={index} />
-              {product.stock === 0 && (
-                <span className="product-card__sold-out">Sold Out</span>
-              )}
-            </div>
-            <div className="product-card__body">
-              <p className="product-card__category">{product.category_name}</p>
-              <p className={`product-card__name ${product.stock === 0 ? 'product-card__name--sold-out' : ''}`}>
-                {product.name}
-              </p>
-              <p className="product-card__price">${product.price}</p>
-            </div>
-          </Link>
+          <ProductCard key={product.id} product={product} index={index} />
         ))}
       </section>
 

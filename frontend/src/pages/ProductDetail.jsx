@@ -1,9 +1,40 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import api from '../api/api.js';
+import ProductGallery from '../components/products/ProductGallery.jsx';
+import SizeSelector from '../components/products/SizeSelector.jsx';
 import { getLocalProductImageUrls } from '../utils/productImages.js';
 
 const SIZES = ['XS', 'S', 'M', 'L', 'XL'];
+const NO_IMAGE_PLACEHOLDER = 'https://via.placeholder.com/1200x1200?text=No+Image';
+
+function getImageList(product) {
+  if (!product) return [NO_IMAGE_PLACEHOLDER];
+
+  const imageUrls = Array.isArray(product.image_urls) ? product.image_urls : [];
+  const fallbackImages = Array.isArray(product.images) ? product.images : [];
+
+  const list = [
+    ...getLocalProductImageUrls(product.id),
+    product.image_url,
+    ...imageUrls,
+    ...fallbackImages,
+  ];
+
+  const uniqueImages = [...new Set(list.filter(Boolean))];
+  return uniqueImages.length ? uniqueImages : [NO_IMAGE_PLACEHOLDER];
+}
+
+function normalizeSizeQuantities(product) {
+  if (!product?.size_quantities || typeof product.size_quantities !== 'object') {
+    return null;
+  }
+
+  return Object.entries(product.size_quantities).reduce((acc, [size, quantity]) => {
+    acc[String(size).toUpperCase()] = Number(quantity) || 0;
+    return acc;
+  }, {});
+}
 
 function ProductDetail() {
   const { id } = useParams();
@@ -13,6 +44,8 @@ function ProductDetail() {
   const [images, setImages] = useState([]);
   const [selectedImage, setSelectedImage] = useState('');
   const [selectedSize, setSelectedSize] = useState('M');
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [cartMessage, setCartMessage] = useState('');
 
   useEffect(() => {
     let isMounted = true;
@@ -41,57 +74,24 @@ function ProductDetail() {
     };
   }, [id]);
 
-  const imageCandidates = useMemo(() => {
-    if (!product) return [];
-
-    const list = [
-      ...getLocalProductImageUrls(product.id),
-      product.image_url,
-      ...(Array.isArray(product.images) ? product.images : []),
-    ];
-
-    return [...new Set(list.filter(Boolean))];
+  useEffect(() => {
+    const nextImages = getImageList(product);
+    setImages(nextImages);
+    setSelectedImage(nextImages[0]);
   }, [product]);
 
-  useEffect(() => {
-    let isMounted = true;
-
-    async function resolveAvailableImages() {
-      if (!imageCandidates.length) {
-        setImages(['https://via.placeholder.com/1200x1200?text=No+Image']);
-        return;
-      }
-
-      const checks = await Promise.all(
-        imageCandidates.map(
-          (url) =>
-            new Promise((resolve) => {
-              const img = new Image();
-              img.onload = () => resolve(url);
-              img.onerror = () => resolve(null);
-              img.src = url;
-            })
-        )
-      );
-
-      if (!isMounted) return;
-
-      const available = checks.filter(Boolean);
-      setImages(available.length ? available : ['https://via.placeholder.com/1200x1200?text=No+Image']);
-    }
-
-    resolveAvailableImages();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [imageCandidates]);
+  const sizeQuantities = normalizeSizeQuantities(product);
+  const availableSizes = sizeQuantities && Object.keys(sizeQuantities).length
+    ? Object.keys(sizeQuantities)
+    : SIZES;
+  const stock = Number(product?.stock) || 0;
+  const selectedSizeQuantity = sizeQuantities?.[selectedSize] ?? 0;
+  const canAddToCart = stock > 0 && selectedSizeQuantity > 0 && !isAddingToCart;
 
   useEffect(() => {
-    if (images.length) {
-      setSelectedImage(images[0]);
-    }
-  }, [images]);
+    if (availableSizes.includes(selectedSize)) return;
+    setSelectedSize(availableSizes[0]);
+  }, [product, selectedSize]);
 
   if (loading) {
     return <main className="product-detail-page"><p className="grid-message">Loading product...</p></main>;
@@ -106,6 +106,31 @@ function ProductDetail() {
     );
   }
 
+  const hasSizeInventory = sizeQuantities && Object.values(sizeQuantities).some((quantity) => quantity > 0);
+
+  async function handleAddToCart() {
+    if (!product?.id || !canAddToCart) {
+      return;
+    }
+
+    try {
+      setIsAddingToCart(true);
+      setCartMessage('');
+
+      await api.post('/api/cart', {
+        productId: product.id,
+        quantity: 1,
+      });
+
+      setCartMessage('Added to cart.');
+    } catch (err) {
+      const message = err?.response?.data?.message || 'Unable to add item to cart.';
+      setCartMessage(message);
+    } finally {
+      setIsAddingToCart(false);
+    }
+  }
+
   return (
     <main className="product-detail-page">
       <div className="detail-topbar">
@@ -113,24 +138,12 @@ function ProductDetail() {
       </div>
 
       <section className="product-detail-layout">
-        <div className="product-gallery">
-          <div className="product-gallery__main">
-            <img src={selectedImage} alt={product.name} />
-          </div>
-
-          <div className="product-gallery__thumbs">
-            {images.map((imageUrl, index) => (
-              <button
-                key={`${imageUrl}-${index}`}
-                type="button"
-                className={`gallery-thumb ${selectedImage === imageUrl ? 'gallery-thumb--active' : ''}`}
-                onClick={() => setSelectedImage(imageUrl)}
-              >
-                <img src={imageUrl} alt={`${product.name} ${index + 1}`} />
-              </button>
-            ))}
-          </div>
-        </div>
+        <ProductGallery
+          productName={product.name}
+          images={images}
+          selectedImage={selectedImage}
+          onSelectImage={setSelectedImage}
+        />
 
         <div className="product-detail-card">
           <p className="product-detail-card__category">{product.category_name || 'Product'}</p>
@@ -141,28 +154,32 @@ function ProductDetail() {
             {product.description || 'No description available yet.'}
           </p>
 
-          <div className="size-picker">
-            <p className="size-picker__label">Select size</p>
-            <div className="size-picker__buttons">
-              {SIZES.map((size) => (
-                <button
-                  key={size}
-                  type="button"
-                  className={`size-button ${selectedSize === size ? 'size-button--active' : ''}`}
-                  onClick={() => setSelectedSize(size)}
-                >
-                  {size}
-                </button>
-              ))}
-            </div>
-          </div>
+          <SizeSelector
+            availableSizes={availableSizes}
+            sizeQuantities={sizeQuantities}
+            selectedSize={selectedSize}
+            onSelectSize={setSelectedSize}
+          />
 
-          <button type="button" className="add-to-cart-button" disabled>
-            Add to cart (coming soon)
+          {!hasSizeInventory && (
+            <p className="cart-note">No size inventory is available for this product.</p>
+          )}
+
+          <button
+            type="button"
+            className="add-to-cart-button"
+            onClick={handleAddToCart}
+            disabled={!canAddToCart}
+          >
+            {isAddingToCart ? 'Adding...' : 'Add to cart'}
           </button>
 
+          <Link to="/cart" className="detail-cart-link">View cart</Link>
+
+          {cartMessage && <p className="cart-feedback">{cartMessage}</p>}
+
           <p className="stock-note">
-            {product.stock > 0 ? `In stock: ${product.stock}` : 'Currently out of stock'}
+            {stock > 0 ? `In stock: ${stock}` : 'Currently out of stock'}
           </p>
         </div>
       </section>
