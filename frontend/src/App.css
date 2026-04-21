@@ -1,12 +1,8 @@
-/* ============================================================
-   MAISON NO. — Home Page
-   ============================================================ */
+/* MAISON NO. — Home Page */
 
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500&family=Space+Mono:wght@400;700&display=swap');
 
-/* ============================================================
-   RESET & BASE
-   ============================================================ */
+/*RESET & BASE */
 
 *,
 *::before,
@@ -23,9 +19,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* ============================================================
-   NAVBAR
-   ============================================================ */
+/*NAVBAR*/
 
 .navbar {
   background-color: #ffffff;
@@ -125,9 +119,7 @@ body {
   justify-content: center;
 }
 
-/* ============================================================
-   HERO — split dark / light
-   ============================================================ */
+/*HERO — split dark / light*/
 
 .hero {
   display: grid;
@@ -221,109 +213,7 @@ body {
   font-size: 12px;
 }
 
-/* Right product teasers */
-.hero__products {
-  display: grid;
-  grid-template-rows: 1fr 1fr;
-}
-
-.hero__product {
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-.hero__product--light {
-  background: #f0ede8;
-  border-bottom: 0.5px solid #ddd9d2;
-}
-
-.hero__product--dark {
-  background: #2a2a2a;
-}
-
-.hero__product-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-
-.hero__product-category {
-  font-family: 'Space Mono', monospace;
-  font-size: 7px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  margin-bottom: 3px;
-}
-
-.hero__product-category--light { color: #888888; }
-.hero__product-category--dark  { color: rgba(255, 255, 255, 0.35); }
-
-.hero__product-name {
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.hero__product-name--light { color: #1a1a1a; }
-.hero__product-name--dark  { color: #ffffff; }
-
-.hero__product-price {
-  font-family: 'Space Mono', monospace;
-  font-size: 11px;
-}
-
-.hero__product-price--light { color: #555555; }
-.hero__product-price--dark  { color: rgba(255, 255, 255, 0.45); }
-
-/* Colour swatch placeholder blocks */
-.hero__swatches {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  height: 55px;
-}
-
-.hero__swatch-block {
-  border-radius: 2px;
-}
-
-.hero__swatch-block--stone {
-  background: #e0ddd8;
-}
-
-.hero__swatch-block--sand {
-  background: #ccc9c3;
-}
-
-/* Colour dot swatches */
-.colour-swatches {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-}
-
-.swatch {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-}
-
-.swatch--white {
-  background: #ffffff;
-}
-
-.swatch--gold {
-  background: #c0a882;
-}
-
-.swatch--charcoal {
-  background: #555555;
-}
-
-/* ============================================================
-   ANNOUNCEMENT BAR
-   ============================================================ */
+/*ANNOUNCEMENT BAR */
 
 .announcement-bar {
   padding: 8px 20px;
@@ -354,9 +244,9 @@ body {
   color: #555555;
 }
 
-/* ============================================================
+/* 
    CATEGORY FILTER
-   ============================================================ */
+    */
 
 .category-filter {
   background: #f5f3ef;

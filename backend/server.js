@@ -245,6 +245,15 @@ export async function initDatabase() {
       image_urls: ['https://via.placeholder.com/400x400?text=Skinny+Jeans'],
       size_quantities: { XS: 5, S: 9, M: 12, L: 9, XL: 5 },
     },
+    {
+      name: 'Long Sleeve Sweater ',
+      description: 'Cozy Sweater with a relaxed fit.',
+      price: 79.99,
+      image_url: 'https://via.placeholder.com/400x400?text=Long+Sleeve+Sweater',
+      image_urls: ['https://via.placeholder.com/400x400?text=Long+Sleeve+Sweater'],
+      size_quantities: { XS: 5, S: 9, M: 12, L: 9, XL: 5 },
+    },
+    
   ];
 
   for (const starterProduct of starterProducts) {
