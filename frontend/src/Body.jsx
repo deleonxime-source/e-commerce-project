@@ -72,7 +72,7 @@ const Home = () => {
     <main className="body">
 
       {/* Hero */}
-      <section className="hero">
+<section className="hero">
         <div className="hero__editorial">
           <div>
             <p className="hero__season">SS — 2026</p>
@@ -96,22 +96,7 @@ const Home = () => {
             </div>
           </div>
         </div>
-
-        <div className="hero__products">
-          {HERO_PRODUCTS.map((product) => (
-            <HeroProductPanel
-              key={product.name}
-              tone={product.tone}
-              category={product.category}
-              name={product.name}
-              price={product.price}
-              swatchType={product.swatchType}
-              swatches={product.swatches}
-            />
-          ))}
-        </div>
       </section>
-
       {/* Announcement bar */}
       <AnnouncementBar items={ANNOUNCEMENT_ITEMS} />
 
