@@ -213,51 +213,6 @@ body {
   font-size: 12px;
 }
 
-/* Colour swatch placeholder blocks */
-.hero__swatches {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  height: 55px;
-}
-
-.hero__swatch-block {
-  border-radius: 2px;
-}
-
-.hero__swatch-block--stone {
-  background: #e0ddd8;
-}
-
-.hero__swatch-block--sand {
-  background: #ccc9c3;
-}
-
-/* Colour dot swatches */
-.colour-swatches {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-}
-
-.swatch {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-}
-
-.swatch--white {
-  background: #ffffff;
-}
-
-.swatch--gold {
-  background: #c0a882;
-}
-
-.swatch--charcoal {
-  background: #555555;
-}
-
 /*ANNOUNCEMENT BAR */
 
 .announcement-bar {
