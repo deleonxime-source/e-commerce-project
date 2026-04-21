@@ -1,29 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from './api/api.js';
-import HeroProductPanel from './components/home/HeroProductPanel.jsx';
 import AnnouncementBar from './components/home/AnnouncementBar.jsx';
 import CategoryFilter from './components/home/CategoryFilter.jsx';
 import ProductCard from './components/products/ProductCard.jsx';
-
-const HERO_PRODUCTS = [
-  {
-    tone: 'light',
-    category: 'Outerwear',
-    name: 'Anatomical Jacket',
-    price: '$890',
-    swatchType: 'blocks',
-    swatches: ['hero__swatch-block--stone', 'hero__swatch-block--sand'],
-  },
-  {
-    tone: 'dark',
-    category: 'Knitwear',
-    name: 'Deconstructed Turtleneck',
-    price: '$420',
-    swatchType: 'dots',
-    swatches: ['swatch--white', 'swatch--gold', 'swatch--charcoal'],
-  },
-];
 
 const ANNOUNCEMENT_ITEMS = [
   'Free shipping over $300',
@@ -71,8 +51,7 @@ const Home = () => {
   return (
     <main className="body">
 
-      {/* Hero */}
-<section className="hero">
+      <section className="hero">
         <div className="hero__editorial">
           <div>
             <p className="hero__season">SS — 2026</p>
@@ -97,26 +76,22 @@ const Home = () => {
           </div>
         </div>
       </section>
-      {/* Announcement bar */}
+
       <AnnouncementBar items={ANNOUNCEMENT_ITEMS} />
 
-      {/* Category filter */}
       <CategoryFilter
         categories={categories}
         selectedCategory={selectedCategory}
         onSelectCategory={setSelectedCategory}
       />
 
-      {/* Product grid */}
       <section className="product-grid">
         {loading && (
           <p className="grid-message">Loading...</p>
         )}
-
         {!loading && filteredProducts.length === 0 && (
           <p className="grid-message">No products found.</p>
         )}
-
         {!loading && filteredProducts.map((product, index) => (
           <ProductCard key={product.id} product={product} index={index} />
         ))}
