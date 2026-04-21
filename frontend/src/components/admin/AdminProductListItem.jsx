@@ -1,11 +1,12 @@
-function AdminProductListItem({ product, onEdit, onDelete }) {
+function AdminProductListItem({ product, onEdit, onDeactivate }) {
   return (
     <div className="admin-product-item">
       <div>
         <p className="admin-product-item__name">{product.name}</p>
         <p className="admin-product-item__meta">
-          ${product.price} · Stock {product.stock}
+          ${product.price} · Stock {product.stock} · {product.category_name || 'Uncategorized'}
         </p>
+        {!product.is_active && <p className="admin-product-item__inactive">Inactive</p>}
       </div>
       <div className="admin-product-item__actions">
         <button
@@ -18,9 +19,10 @@ function AdminProductListItem({ product, onEdit, onDelete }) {
         <button
           type="button"
           className="admin-danger"
-          onClick={() => onDelete(product.id)}
+          onClick={() => onDeactivate(product.id)}
+          disabled={!product.is_active}
         >
-          Delete
+          {product.is_active ? 'Deactivate' : 'Inactive'}
         </button>
       </div>
     </div>

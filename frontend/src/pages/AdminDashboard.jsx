@@ -6,6 +6,12 @@ import AdminSizeQuantities from '../components/admin/AdminSizeQuantities.jsx';
 import AdminProductListItem from '../components/admin/AdminProductListItem.jsx';
 
 const SIZE_OPTIONS = ['XS', 'S', 'M', 'L', 'XL'];
+const ORDER_STATUS_OPTIONS = [
+  { value: 'placed', label: 'Order Placed' },
+  { value: 'shipping', label: 'Shipping In Progress' },
+  { value: 'delivered', label: 'Delivered' },
+  { value: 'returned', label: 'Returned' },
+];
 const MAX_IMAGES = 10;
 const MAX_UPLOAD_SIZE_BYTES = 5 * 1024 * 1024;
 const MAX_IMAGE_VALUE_LENGTH = 2000000;
@@ -15,6 +21,7 @@ const createEmptyForm = () => ({
   name: '',
   description: '',
   price: '',
+  category_id: '',
   image_url: '',
   image_urls: [''],
   size_quantities: {
@@ -35,6 +42,7 @@ function createEmptyFieldErrors() {
   return {
     name: '',
     price: '',
+    category_id: '',
     description: '',
     image_url: '',
     image_urls: {},
@@ -64,6 +72,11 @@ function validateForm(form) {
     fieldErrors.price = 'Price must be a valid number.';
   } else if (price < 0) {
     fieldErrors.price = 'Price cannot be negative.';
+  }
+
+  const categoryId = Number(form.category_id);
+  if (!Number.isInteger(categoryId) || categoryId < 1) {
+    fieldErrors.category_id = 'Category is required.';
   }
 
   const normalizedImages = form.image_urls.map((url) => url.trim()).filter(Boolean);
@@ -99,6 +112,7 @@ function validateForm(form) {
   const hasError =
     Boolean(fieldErrors.name) ||
     Boolean(fieldErrors.price) ||
+    Boolean(fieldErrors.category_id) ||
     Boolean(fieldErrors.description) ||
     Boolean(fieldErrors.image_url) ||
     Object.keys(fieldErrors.image_urls).length > 0 ||
@@ -115,8 +129,12 @@ function validateForm(form) {
 
 function AdminDashboard() {
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [ordersLoading, setOrdersLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [updatingOrderId, setUpdatingOrderId] = useState(null);
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState(createEmptyFieldErrors());
   const [form, setForm] = useState(createEmptyForm());
@@ -125,7 +143,7 @@ function AdminDashboard() {
   async function fetchProducts() {
     try {
       setLoading(true);
-      const response = await api.get('/api/products');
+      const response = await api.get('/api/products?includeInactive=true');
       setProducts(Array.isArray(response.data) ? response.data : []);
       setError('');
     } catch (err) {
@@ -137,8 +155,31 @@ function AdminDashboard() {
     }
   }
 
+  async function fetchCategories() {
+    try {
+      const response = await api.get('/api/categories');
+      setCategories(Array.isArray(response.data) ? response.data : []);
+    } catch {
+      setCategories([]);
+    }
+  }
+
+  async function fetchOrders() {
+    try {
+      setOrdersLoading(true);
+      const response = await api.get('/api/admin/orders');
+      setOrders(Array.isArray(response.data) ? response.data : []);
+    } catch {
+      setOrders([]);
+    } finally {
+      setOrdersLoading(false);
+    }
+  }
+
   useEffect(() => {
     fetchProducts();
+    fetchCategories();
+    fetchOrders();
   }, []);
 
   function resetForm() {
@@ -165,6 +206,7 @@ function AdminDashboard() {
       name: product.name || '',
       description: product.description || '',
       price: product.price ?? '',
+      category_id: product.category_id ?? '',
       image_url: product.image_url || imageUrls[0] || '',
       image_urls: imageUrls.length ? imageUrls : [''],
       size_quantities: normalizedSizes,
@@ -274,6 +316,7 @@ function AdminDashboard() {
       name: form.name.trim(),
       description: form.description.trim(),
       price: Number(form.price),
+      category_id: Number(form.category_id),
       image_url: primaryImage,
       image_urls: validation.normalizedImages,
       size_quantities: SIZE_OPTIONS.reduce((acc, size) => {
@@ -304,7 +347,7 @@ function AdminDashboard() {
   }
 
   async function handleDelete(productId) {
-    const confirmed = window.confirm('Delete this product? This cannot be undone.');
+    const confirmed = window.confirm('Deactivate this product? It will be hidden from shoppers but kept for order history.');
     if (!confirmed) return;
 
     try {
@@ -315,8 +358,37 @@ function AdminDashboard() {
         resetForm();
       }
     } catch (err) {
-      const message = err?.response?.data?.message || 'Unable to delete product';
+      const message = err?.response?.data?.message || 'Unable to deactivate product';
       setError(message);
+    }
+  }
+
+  async function handleUpdateOrderStatus(orderId, status) {
+    try {
+      setUpdatingOrderId(orderId);
+      setError('');
+      await api.put(`/api/admin/orders/${orderId}/status`, { status });
+      await fetchOrders();
+    } catch (err) {
+      const message = err?.response?.data?.message || 'Unable to update order status';
+      setError(message);
+    } finally {
+      setUpdatingOrderId(null);
+    }
+  }
+
+  function getOrderStatusLabel(status) {
+    switch (String(status || '').toLowerCase()) {
+      case 'placed':
+        return 'Order Placed';
+      case 'shipping':
+        return 'Shipping In Progress';
+      case 'delivered':
+        return 'Delivered';
+      case 'returned':
+        return 'Returned';
+      default:
+        return 'Order Placed';
     }
   }
 
@@ -382,6 +454,22 @@ function AdminDashboard() {
                   required
                 />
                 {fieldErrors.price && <p className="admin-field-error">{fieldErrors.price}</p>}
+              </label>
+
+              <label>
+                Category
+                <select
+                  value={form.category_id}
+                  onChange={(event) => updateField('category_id', event.target.value)}
+                  aria-invalid={Boolean(fieldErrors.category_id)}
+                  required
+                >
+                  <option value="">Select a category</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>{category.name}</option>
+                  ))}
+                </select>
+                {fieldErrors.category_id && <p className="admin-field-error">{fieldErrors.category_id}</p>}
               </label>
 
               <label>
@@ -456,11 +544,65 @@ function AdminDashboard() {
                 key={product.id}
                 product={product}
                 onEdit={startEdit}
-                onDelete={handleDelete}
+                onDeactivate={handleDelete}
               />
             ))}
           </div>
         </article>
+      </section>
+
+      <section className="admin-panel admin-panel--orders">
+        <div className="admin-panel__header">
+          <h2>Orders</h2>
+          <p>{ordersLoading ? 'Loading...' : `${orders.length} orders`}</p>
+        </div>
+
+        {orders.length === 0 && !ordersLoading ? (
+          <p className="admin-empty">No orders found.</p>
+        ) : (
+          <div className="orders-table-wrap">
+            <table className="orders-table">
+              <thead>
+                <tr>
+                  <th>Order #</th>
+                  <th>User</th>
+                  <th>Status</th>
+                  <th>Total</th>
+                  <th>Items</th>
+                  <th>Update</th>
+                </tr>
+              </thead>
+              <tbody>
+                {orders.map((order) => (
+                  <tr key={order.id}>
+                    <td>{order.id}</td>
+                    <td>{order.user_id}</td>
+                    <td>{order.status_label || getOrderStatusLabel(order.status)}</td>
+                    <td>${Number(order.total_amount || 0).toFixed(2)}</td>
+                    <td>
+                      {(order.items || []).map((item) => (
+                        <div key={item.id} className="orders-table__detail">
+                          {item.product_name} ({item.size || 'M'}) × {item.quantity}
+                        </div>
+                      ))}
+                    </td>
+                    <td>
+                      <select
+                        value={order.status || 'placed'}
+                        onChange={(event) => handleUpdateOrderStatus(order.id, event.target.value)}
+                        disabled={updatingOrderId === order.id}
+                      >
+                        {ORDER_STATUS_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>{option.label}</option>
+                        ))}
+                      </select>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
     </main>
   );
