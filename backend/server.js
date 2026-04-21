@@ -14,34 +14,25 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
-const sequelize = databaseUrl
-  ? new Sequelize(databaseUrl, {
-      dialect: 'postgres',
-      define: {
-        schema: DB_SCHEMA,
+const sequelize = new Sequelize(
+  process.env.DB_NAME,
+  process.env.DB_USER,
+  process.env.DB_PASSWORD,
+  {
+    host: process.env.DB_HOST,
+    port: Number(process.env.DB_PORT) || 5432,
+    dialect: 'postgres',
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false,
       },
-    })
-  : new Sequelize(
-      process.env.DB_NAME,
-      process.env.DB_USER,
-      process.env.DB_PASSWORD,
-      {
-        host: process.env.DB_HOST,
-        port: Number(process.env.DB_PORT) || 5432,
-        dialect: 'postgres',
-        dialectOptions: useSsl
-          ? {
-              ssl: {
-                require: true,
-                rejectUnauthorized: false,
-              },
-            }
-          : undefined,
-        define: {
-          schema: DB_SCHEMA,
-        },
-      }
-    );
+    },
+    define: {
+      schema: 'public',
+    },
+  }
+);
 
 // Sequelize table definitions.
 const Product = sequelize.define(
