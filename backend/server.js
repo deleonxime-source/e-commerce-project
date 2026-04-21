@@ -7,32 +7,32 @@ import { pathToFileURL } from 'url';
 dotenv.config();
 
 const DB_SCHEMA = process.env.DB_SCHEMA || 'public';
-const useSsl = process.env.PGSSLMODE === "require";
-const databaseUrl = (process.env.DATABASE_URL || '').trim();
+
+const pgSsl = {
+  ssl: {
+    require: true,
+    rejectUnauthorized: false,
+  },
+};
 
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
-const sequelize = new Sequelize(
-  process.env.DB_NAME,
-  process.env.DB_USER,
-  process.env.DB_PASSWORD,
-  {
-    host: process.env.DB_HOST,
-    port: Number(process.env.DB_PORT) || 5432,
-    dialect: 'postgres',
-    dialectOptions: {
-      ssl: {
-        require: true,
-        rejectUnauthorized: false,
-      },
-    },
-    define: {
-      schema: 'public',
-    },
-  }
-);
+const databaseUrl = (process.env.DATABASE_URL || '').trim();
+const sequelize = databaseUrl
+  ? new Sequelize(databaseUrl, {
+      dialect: 'postgres',
+      dialectOptions: pgSsl,
+      define: { schema: DB_SCHEMA },
+    })
+  : new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASSWORD, {
+      host: process.env.DB_HOST,
+      port: Number(process.env.DB_PORT) || 5432,
+      dialect: 'postgres',
+      dialectOptions: pgSsl,
+      define: { schema: DB_SCHEMA },
+    });
 
 // Sequelize table definitions.
 const Product = sequelize.define(
@@ -583,11 +583,22 @@ app.get('/api/categories', async (req, res, next) => {
 app.use(errorHandler);
 
 export async function startServer() {
-  const port = process.env.PORT || 4001;
+  const port = Number(process.env.PORT) || 4001;
   await initDatabase();
 
-  return app.listen(port, () => {
-    console.log(`Backend server listening on http://localhost:${port}`);
+  return new Promise((resolve, reject) => {
+    const server = app.listen(port, () => {
+      console.log(`Backend server listening on http://localhost:${port}`);
+      resolve(server);
+    });
+    server.on('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        console.error(
+          `Port ${port} is already in use. Stop the other process (e.g. another terminal running node server.js) or set PORT in .env to a free port.`
+        );
+      }
+      reject(err);
+    });
   });
 }
 
@@ -595,7 +606,7 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   try {
     await startServer();
   } catch (err) {
-    console.error('Failed to initialize database:', err);
+    console.error(err.code === 'EADDRINUSE' ? 'Failed to bind port:' : 'Failed to initialize database:', err.message);
     process.exit(1);
   }
 }
