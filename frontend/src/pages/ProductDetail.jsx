@@ -5,14 +5,8 @@ import ProductGallery from '../components/products/ProductGallery.jsx';
 import SizeSelector from '../components/products/SizeSelector.jsx';
 
 const SIZE_ORDER = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
-const sizeQuantities = product.size_quantities;
-const availableSizes = sizeQuantities && Object.keys(sizeQuantities).length
-  ? Object.keys(sizeQuantities).sort(
-      (a, b) => SIZE_ORDER.indexOf(a) - SIZE_ORDER.indexOf(b)
-    )
-  : SIZES;
-  const NO_IMAGE_PLACEHOLDER = 'https://via.placeholder.com/1200x1200?text=No+Image';
-
+const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+const NO_IMAGE_PLACEHOLDER = 'https://via.placeholder.com/1200x1200?text=No+Image';
   function getImageList(product) {
   if (!product) return [NO_IMAGE_PLACEHOLDER];
 
@@ -24,7 +18,6 @@ const availableSizes = sizeQuantities && Object.keys(sizeQuantities).length
   return single ? [single] : [NO_IMAGE_PLACEHOLDER];
 }
 
-  const uniqueImages = [...new Set(list.filter(Boolean))];
   
 
 function normalizeSizeQuantities(product) {
