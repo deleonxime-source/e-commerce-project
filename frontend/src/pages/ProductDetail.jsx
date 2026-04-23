@@ -3,27 +3,27 @@ import { Link, useParams } from 'react-router-dom';
 import api from '../api/api.js';
 import ProductGallery from '../components/products/ProductGallery.jsx';
 import SizeSelector from '../components/products/SizeSelector.jsx';
-import { getLocalProductImageUrls } from '../utils/productImages.js';
 
-const SIZES = ['XS', 'S', 'M', 'L', 'XL'];
-const NO_IMAGE_PLACEHOLDER = 'https://via.placeholder.com/1200x1200?text=No+Image';
+const SIZE_ORDER = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+const availableSizes = sizeQuantities && Object.keys(sizeQuantities).length
+  ? Object.keys(sizeQuantities).sort(
+      (a, b) => SIZE_ORDER.indexOf(a) - SIZE_ORDER.indexOf(b)
+    )
+  : SIZES;const NO_IMAGE_PLACEHOLDER = 'https://via.placeholder.com/1200x1200?text=No+Image';
 
-function getImageList(product) {
+  function getImageList(product) {
   if (!product) return [NO_IMAGE_PLACEHOLDER];
 
-  const imageUrls = Array.isArray(product.image_urls) ? product.image_urls : [];
-  const fallbackImages = Array.isArray(product.images) ? product.images : [];
+  const single =
+    product.image_url ||
+    (Array.isArray(product.image_urls) && product.image_urls[0]) ||
+    (Array.isArray(product.images) && product.images[0]);
 
-  const list = [
-    ...getLocalProductImageUrls(product.id),
-    product.image_url,
-    ...imageUrls,
-    ...fallbackImages,
-  ];
+  return single ? [single] : [NO_IMAGE_PLACEHOLDER];
+}
 
   const uniqueImages = [...new Set(list.filter(Boolean))];
-  return uniqueImages.length ? uniqueImages : [NO_IMAGE_PLACEHOLDER];
-}
+  
 
 function normalizeSizeQuantities(product) {
   if (!product?.size_quantities || typeof product.size_quantities !== 'object') {
