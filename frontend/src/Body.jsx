@@ -52,30 +52,42 @@ const Home = () => {
 
   return (
     <main className="body">
-
       <section className="hero">
         <div className="hero__editorial">
-          <div>
-            <p className="hero__season">SS — 2026</p>
-            <h1 className="hero__headline">
-              CORPS
-              <span className="diamond">◆</span>
-              OBJECT
-            </h1>
-          </div>
-          <div>
-            <p className="hero__collection-label">The new collection</p>
-            <div className="hero__actions">
-              <Link to="/products" className="hero__cta">
-                <span>Explore</span>
-                <span className="arrow">→</span>
-              </Link>
-              {isAdmin && (
-                <Link to="/admin" className="hero__cta">
-                  <span>Admin</span>
+          <video
+            className="hero__video"
+            src="/videos/hero.mp4"
+            autoPlay
+            loop
+            muted
+            playsInline
+          />
+
+          <div className="hero__overlay" />
+
+          <div className="hero__content">
+            <div>
+              <p className="hero__season">SS — 2026</p>
+              <h1 className="hero__headline">
+                CORPS
+                <span className="diamond">◆</span>
+                OBJECT
+              </h1>
+            </div>
+            <div>
+              <p className="hero__collection-label">The new collection</p>
+              <div className="hero__actions">
+                <Link to="/products" className="hero__cta">
+                  <span>Explore</span>
                   <span className="arrow">→</span>
                 </Link>
-              )}
+                {isAdmin && (
+                  <Link to="/admin" className="hero__cta">
+                    <span>Admin</span>
+                    <span className="arrow">→</span>
+                  </Link>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -100,7 +112,6 @@ const Home = () => {
           <ProductCard key={product.id} product={product} index={index} />
         ))}
       </section>
-
     </main>
   );
 };

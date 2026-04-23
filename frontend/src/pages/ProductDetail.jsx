@@ -5,7 +5,8 @@ import api from '../api/api.js';
 import ProductGallery from '../components/products/ProductGallery.jsx';
 import SizeSelector from '../components/products/SizeSelector.jsx';
 
-const SIZES = ['XS', 'S', 'M', 'L', 'XL'];
+const SIZE_ORDER = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 const NO_IMAGE_PLACEHOLDER = 'https://via.placeholder.com/1200x1200?text=No+Image';
 
 function getImageList(product) {
