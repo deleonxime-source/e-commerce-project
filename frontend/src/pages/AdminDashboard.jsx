@@ -23,7 +23,7 @@ const createEmptyForm = () => ({
   price: '',
   category_id: '',
   image_url: '',
-  image_urls: [''],
+  image_urls: [],
   size_quantities: {
     XS: 0,
     S: 0,
@@ -208,7 +208,7 @@ function AdminDashboard() {
       price: product.price ?? '',
       category_id: product.category_id ?? '',
       image_url: product.image_url || imageUrls[0] || '',
-      image_urls: imageUrls.length ? imageUrls : [''],
+      image_urls: imageUrls,
       size_quantities: normalizedSizes,
     });
     setFieldErrors(createEmptyFieldErrors());
@@ -230,7 +230,27 @@ function AdminDashboard() {
     setForm((prev) => {
       const nextImages = [...prev.image_urls];
       nextImages[index] = value;
-      return { ...prev, image_urls: nextImages };
+
+      // For brand new products, any newly added non-empty image becomes image #1.
+      if (!prev.id && String(value || '').trim()) {
+        const nonEmptyImages = nextImages.filter(Boolean);
+        const reorderedImages = [
+          value,
+          ...nonEmptyImages.filter((imageRef) => imageRef !== value),
+        ];
+
+        return {
+          ...prev,
+          image_url: value,
+          image_urls: reorderedImages.length ? reorderedImages : [''],
+        };
+      }
+
+      return {
+        ...prev,
+        image_url: index === 0 ? value : prev.image_url,
+        image_urls: nextImages,
+      };
     });
   }
 
@@ -241,7 +261,7 @@ function AdminDashboard() {
   function removeImageInput(index) {
     setForm((prev) => {
       const nextImages = prev.image_urls.filter((_, imageIndex) => imageIndex !== index);
-      return { ...prev, image_urls: nextImages.length ? nextImages : [''] };
+      return { ...prev, image_urls: nextImages };
     });
   }
 
@@ -291,10 +311,37 @@ function AdminDashboard() {
       }
 
       setError('');
-      updateImageAt(index, reader.result);
-      if (index === 0) {
-        updateField('image_url', reader.result);
-      }
+      setFieldErrors((prev) => {
+        const imageErrors = { ...prev.image_urls };
+        delete imageErrors[index];
+        return { ...prev, image_url: '', image_urls: imageErrors };
+      });
+
+      setForm((prev) => {
+        const nextImages = [...prev.image_urls];
+        nextImages[index] = reader.result;
+
+        // For brand new products, any uploaded image becomes image #1 (primary).
+        if (!prev.id) {
+          const nonEmptyImages = nextImages.filter(Boolean);
+          const reorderedImages = [
+            reader.result,
+            ...nonEmptyImages.filter((imageRef) => imageRef !== reader.result),
+          ];
+
+          return {
+            ...prev,
+            image_url: reader.result,
+            image_urls: reorderedImages.length ? reorderedImages : [''],
+          };
+        }
+
+        return {
+          ...prev,
+          image_url: index === 0 ? reader.result : prev.image_url,
+          image_urls: nextImages,
+        };
+      });
     };
     reader.readAsDataURL(file);
   }

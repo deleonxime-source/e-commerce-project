@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
+import { useAuthContext } from '@asgardeo/auth-react';
 import api from '../api/api.js';
 import ProductGallery from '../components/products/ProductGallery.jsx';
 import SizeSelector from '../components/products/SizeSelector.jsx';
-import { getLocalProductImageUrls } from '../utils/productImages.js';
 
 const SIZES = ['XS', 'S', 'M', 'L', 'XL'];
 const NO_IMAGE_PLACEHOLDER = 'https://via.placeholder.com/1200x1200?text=No+Image';
@@ -15,7 +15,6 @@ function getImageList(product) {
   const fallbackImages = Array.isArray(product.images) ? product.images : [];
 
   const list = [
-    ...getLocalProductImageUrls(product.id),
     product.image_url,
     ...imageUrls,
     ...fallbackImages,
@@ -38,6 +37,8 @@ function normalizeSizeQuantities(product) {
 
 function ProductDetail() {
   const { id } = useParams();
+  const location = useLocation();
+  const { state: authState, signIn } = useAuthContext();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -111,6 +112,11 @@ function ProductDetail() {
   async function handleAddToCart() {
     if (!product?.id || !canAddToCart) {
       return;
+    }
+
+    if (!authState.isAuthenticated) {
+      sessionStorage.setItem('returnPath', location.pathname);
+      return signIn();
     }
 
     try {

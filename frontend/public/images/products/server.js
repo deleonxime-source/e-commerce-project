@@ -3,128 +3,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { DataTypes, Sequelize } from 'sequelize';
 import { pathToFileURL } from 'url';
-import * as jose from 'jose';
 
 dotenv.config();
-
-// Asgardeo JWKS for JWT verification (org must match frontend baseUrl, e.g. .../t/<ASGARDEO_ORG>)
-const ASGARDEO_ORG = process.env.ASGARDEO_ORG || 'lukasximenaecommerce2';
-const JWKS_URI = process.env.ASGARDEO_JWKS_URI || `https://api.asgardeo.io/t/${ASGARDEO_ORG}/oauth2/jwks`;
-const ASGARDEO_ISSUER = (process.env.ASGARDEO_ISSUER || `https://api.asgardeo.io/t/${ASGARDEO_ORG}`).replace(
-  /\/$/,
-  ''
-);
-const ASGARDEO_AUDIENCE = process.env.ASGARDEO_AUDIENCE || 'pxxlcCNeO4eExxVwYEnTRoKJHnEa';
-
-const JWKS = jose.createRemoteJWKSet(new URL(JWKS_URI));
-
-const jwtVerifyOptions = {
-  issuer: ASGARDEO_ISSUER,
-  audience: ASGARDEO_AUDIENCE,
-};
-
-function toRoleArray(value) {
-  if (value == null) return [];
-  if (Array.isArray(value)) return value.map((v) => String(v));
-  if (typeof value === 'string') {
-    return value
-      .split(/[,;]/)
-      .map((s) => s.trim())
-      .filter(Boolean);
-  }
-  return [String(value)];
-}
-
-function resolveRolesFromPayload(payload) {
-  if (!payload) return [];
-  return [
-    ...new Set(
-      [
-        ...toRoleArray(payload.groups),
-        ...toRoleArray(payload.roles),
-        ...toRoleArray(payload['http://wso2.org/claims/groups']),
-      ]
-    ),
-  ];
-}
-
-// Required JWT auth: verify Bearer with Asgardeo JWKS, set req.userId from payload.sub (and req.auth = payload)
-async function authMiddleware(req, res, next) {
-  const authHeader = (req.headers.authorization || '').trim();
-
-  if (!authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({
-      error: 'Missing auth',
-      detail: 'Send Authorization: Bearer <access_token>',
-    });
-  }
-
-  const token = authHeader.slice(7).trim();
-  const looksLikeJwt = token && token.split('.').length === 3;
-
-  if (!looksLikeJwt) {
-    return res.status(401).json({
-      error: 'Access token is not a JWT. In Asgardeo, set your app to use JWT access tokens (Protocol tab).',
-    });
-  }
-
-  try {
-    const { payload } = await jose.jwtVerify(token, JWKS, jwtVerifyOptions);
-    req.userId = payload.sub;
-    req.auth = payload;
-    return next();
-  } catch (err) {
-    console.error('JWT verification failed:', err.message);
-    return res.status(401).json({
-      error: 'Invalid or expired token',
-      detail: err.message,
-    });
-  }
-}
-
-// Optional: same verification when a Bearer token is present; invalid/expired tokens are ignored (public catalog)
-async function optionalAuthMiddleware(req, res, next) {
-  req.userId = undefined;
-  req.auth = undefined;
-  const authHeader = (req.headers.authorization || '').trim();
-  if (!authHeader.startsWith('Bearer ')) {
-    return next();
-  }
-  const token = authHeader.slice(7).trim();
-  if (!token || token.split('.').length !== 3) {
-    return next();
-  }
-  try {
-    const { payload } = await jose.jwtVerify(token, JWKS, jwtVerifyOptions);
-    req.userId = payload.sub;
-    req.auth = payload;
-  } catch {
-    // treat as unauthenticated
-  }
-  next();
-}
-
-function requireAdminRole(req, res, next) {
-  if (!req.userId) {
-    return res.status(401).json({
-      error: 'Missing auth',
-      detail: 'Send Authorization: Bearer <access_token>',
-    });
-  }
-  if (!resolveRolesFromPayload(req.auth).includes('admin')) {
-    return res.status(403).json({ message: 'Forbidden' });
-  }
-  next();
-}
-
-function getUserId(req) {
-  if (!req.userId) {
-    const err = new Error('Unauthorized');
-    err.status = 401;
-    throw err;
-  }
-  return String(req.userId);
-}
 
 const DB_SCHEMA = process.env.DB_SCHEMA || 'public';
 
@@ -280,8 +160,8 @@ export async function initDatabase() {
       category_name: 'shirt',
       description: 'Soft cotton T-shirt with a clean crewneck.',
       price: 24.99,
-      image_url: '/images/products/product-1.jpg',
-      image_urls: ['/images/products/product-1.jpg'],
+      image_url: 'https://via.placeholder.com/400x400?text=White+Tee',
+      image_urls: ['https://via.placeholder.com/400x400?text=White+Tee'],
       size_quantities: { XS: 4, S: 8, M: 12, L: 10, XL: 6 },
     },
     {
@@ -290,8 +170,8 @@ export async function initDatabase() {
       category_name: 'outerwear',
       description: 'Structured denim jacket for everyday wear.',
       price: 79.99,
-      image_url: '/images/products/product-2.jpg',
-      image_urls: ['/images/products/product-2.jpg'],
+      image_url: 'https://via.placeholder.com/400x400?text=Denim+Jacket',
+      image_urls: ['https://via.placeholder.com/400x400?text=Denim+Jacket'],
       size_quantities: { XS: 3, S: 6, M: 8, L: 8, XL: 5 },
     },
     {
@@ -300,8 +180,8 @@ export async function initDatabase() {
       category_name: 'pants',
       description: 'Stretch denim with a slim fit.',
       price: 59.99,
-      image_url: '/images/products/product-3.jpg',
-      image_urls: ['/images/products/product-3.jpg'],
+      image_url: 'https://via.placeholder.com/400x400?text=Skinny+Jeans',
+      image_urls: ['https://via.placeholder.com/400x400?text=Skinny+Jeans'],
       size_quantities: { XS: 5, S: 9, M: 12, L: 9, XL: 5 },
     },
     {
@@ -310,8 +190,8 @@ export async function initDatabase() {
       category_name: 'shirt',
       description: 'Cozy sweater with a relaxed fit.',
       price: 79.99,
-      image_url: '/images/products/product-4.jpg',
-      image_urls: ['/images/products/product-4.jpg'],
+      image_url: 'https://via.placeholder.com/400x400?text=Long+Sleeve+Sweater',
+      image_urls: ['https://via.placeholder.com/400x400?text=Long+Sleeve+Sweater'],
       size_quantities: { XS: 5, S: 9, M: 12, L: 9, XL: 5 },
     },
   ];
@@ -510,6 +390,49 @@ async function query(text, params) {
   return { rows: Array.isArray(rows) ? rows : [] };
 }
 
+// AUTH TEMPORARILY DISABLED FOR MVP.
+// Re-enable later by restoring express-jwt/jwks-rsa imports and these middleware functions.
+/*
+import expressJwt from 'express-jwt';
+import jwksRsa from 'jwks-rsa';
+
+const getJwtMiddleware = expressJwt({
+  secret: jwksRsa.expressJwtSecret({
+    cache: true,
+    rateLimit: true,
+    jwksRequestsPerMinute: 10,
+    jwksUri: `${process.env.ASGARDEO_ISSUER.replace(/\/oauth2\/token$/, '')}/.well-known/jwks.json`,
+  }),
+  audience: process.env.ASGARDEO_AUDIENCE,
+  issuer: process.env.ASGARDEO_ISSUER,
+  algorithms: ['RS256'],
+});
+
+function authenticate(req, res, next) {
+  getJwtMiddleware(req, res, (err) => {
+    if (err) {
+      return res.status(401).json({ message: 'Unauthorized', details: err.message });
+    }
+    next();
+  });
+}
+
+function authorizeRole(requiredRole) {
+  return (req, res, next) => {
+    const roles = (req.auth && req.auth.roles) || [];
+    if (!roles.includes(requiredRole)) {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
+    next();
+  };
+}
+*/
+
+// MVP user identification helper while auth is disabled.
+function getMvpUserId(req) {
+  return req.headers['x-user-id'] || req.body.userId || req.query.userId || 'demo-user';
+}
+
 function normalizeSize(value) {
   const size = String(value || '').trim().toUpperCase();
   const allowedSizes = new Set(['XS', 'S', 'M', 'L', 'XL']);
@@ -557,21 +480,14 @@ app.get('/', (req, res) => {
   res.json({ status: 'ok', message: 'Ecommerce backend is running' });
 });
 
-app.get('/api/auth/profile', authMiddleware, (req, res) => {
-  res.json({ user: { sub: req.userId, roles: resolveRolesFromPayload(req.auth) } });
-});
+// AUTH TEMPORARILY DISABLED FOR MVP.
+// app.get('/api/auth/profile', authenticate, (req, res) => {
+//   res.json({ user: req.auth });
+// });
 
 async function listProducts(req, res, next) {
   try {
     const includeInactive = String(req.query.includeInactive || '').toLowerCase() === 'true';
-    if (includeInactive) {
-      if (!req.userId) {
-        return res.status(401).json({ message: 'Unauthorized' });
-      }
-      if (!resolveRolesFromPayload(req.auth).includes('admin')) {
-        return res.status(403).json({ message: 'Forbidden' });
-      }
-    }
     const result = await query(
       `SELECT p.*, c.name AS category_name
        FROM products p
@@ -590,14 +506,6 @@ async function getProductById(req, res, next) {
   try {
     const { id } = req.params;
     const includeInactive = String(req.query.includeInactive || '').toLowerCase() === 'true';
-    if (includeInactive) {
-      if (!req.userId) {
-        return res.status(401).json({ message: 'Unauthorized' });
-      }
-      if (!resolveRolesFromPayload(req.auth).includes('admin')) {
-        return res.status(403).json({ message: 'Forbidden' });
-      }
-    }
     const result = await query(
       `SELECT p.*, c.name AS category_name
        FROM products p
@@ -614,11 +522,12 @@ async function getProductById(req, res, next) {
   }
 }
 
-// Product routes: public for active catalog; includeInactive= requires admin.
-app.get('/api/products', optionalAuthMiddleware, listProducts);
-app.get('/api/products/:id', optionalAuthMiddleware, getProductById);
+// Product routes.
+app.get('/api/products', listProducts);
+app.get('/api/products/:id', getProductById);
 
-app.post('/api/products', authMiddleware, requireAdminRole, async (req, res, next) => {
+// Auth/admin guard disabled for MVP; restore middleware arguments later.
+app.post('/api/products', async (req, res, next) => {
   try {
     const product = normalizeProductPayload(req.body);
 
@@ -649,7 +558,8 @@ app.post('/api/products', authMiddleware, requireAdminRole, async (req, res, nex
   }
 });
 
-app.put('/api/products/:id', authMiddleware, requireAdminRole, async (req, res, next) => {
+// Auth/admin guard disabled for MVP; restore middleware arguments later.
+app.put('/api/products/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
     const product = normalizeProductPayload(req.body);
@@ -694,7 +604,8 @@ app.put('/api/products/:id', authMiddleware, requireAdminRole, async (req, res, 
   }
 });
 
-app.delete('/api/products/:id', authMiddleware, requireAdminRole, async (req, res, next) => {
+// Auth/admin guard disabled for MVP; restore middleware arguments later.
+app.delete('/api/products/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
 
@@ -713,9 +624,10 @@ app.delete('/api/products/:id', authMiddleware, requireAdminRole, async (req, re
   }
 });
 
-app.get('/api/cart', authMiddleware, async (req, res, next) => {
+// Cart routes (auth disabled for MVP).
+app.get('/api/cart', async (req, res, next) => {
   try {
-    const userId = getUserId(req);
+    const userId = getMvpUserId(req);
     const result = await query(
       `SELECT c.id AS cart_id,
               p.id AS product_id,
@@ -746,9 +658,9 @@ app.get('/api/cart', authMiddleware, async (req, res, next) => {
   }
 });
 
-app.post('/api/cart', authMiddleware, async (req, res, next) => {
+app.post('/api/cart', async (req, res, next) => {
   try {
-    const userId = getUserId(req);
+    const userId = getMvpUserId(req);
     const { productId, quantity } = req.body;
     const size = normalizeSize(req.body?.size);
 
@@ -919,9 +831,9 @@ async function updateOrderStatus(orderId, nextStatus) {
   }
 }
 
-app.post('/api/orders', authMiddleware, async (req, res, next) => {
+app.post('/api/orders', async (req, res, next) => {
   try {
-    const userId = getUserId(req);
+    const userId = getMvpUserId(req);
     const shippingAddress = String(req.body?.shippingAddress || 'Not provided').trim() || 'Not provided';
 
     const cartResult = await query('SELECT id FROM carts WHERE user_id = $1', [userId]);
@@ -1021,9 +933,9 @@ app.post('/api/orders', authMiddleware, async (req, res, next) => {
   }
 });
 
-app.get('/api/orders', authMiddleware, async (req, res, next) => {
+app.get('/api/orders', async (req, res, next) => {
   try {
-    const userId = getUserId(req);
+    const userId = getMvpUserId(req);
     const ordersResult = await query(
       'SELECT * FROM orders WHERE user_id = $1 ORDER BY created_at DESC, id DESC',
       [userId]
@@ -1043,9 +955,9 @@ app.get('/api/orders', authMiddleware, async (req, res, next) => {
   }
 });
 
-app.post('/api/orders/:id/return', authMiddleware, async (req, res, next) => {
+app.post('/api/orders/:id/return', async (req, res, next) => {
   try {
-    const userId = getUserId(req);
+    const userId = getMvpUserId(req);
     const { id } = req.params;
 
     const orderResult = await query('SELECT id, user_id FROM orders WHERE id = $1', [id]);
@@ -1064,7 +976,7 @@ app.post('/api/orders/:id/return', authMiddleware, async (req, res, next) => {
   }
 });
 
-app.get('/api/admin/orders', authMiddleware, requireAdminRole, async (req, res, next) => {
+app.get('/api/admin/orders', async (req, res, next) => {
   try {
     const ordersResult = await query('SELECT * FROM orders ORDER BY created_at DESC, id DESC', []);
     const orders = [];
@@ -1082,7 +994,7 @@ app.get('/api/admin/orders', authMiddleware, requireAdminRole, async (req, res, 
   }
 });
 
-app.put('/api/admin/orders/:id/status', authMiddleware, requireAdminRole, async (req, res, next) => {
+app.put('/api/admin/orders/:id/status', async (req, res, next) => {
   try {
     const { id } = req.params;
     const nextStatus = normalizeOrderStatus(req.body?.status);
@@ -1098,9 +1010,9 @@ app.put('/api/admin/orders/:id/status', authMiddleware, requireAdminRole, async 
   }
 });
 
-app.delete('/api/cart/:productId', authMiddleware, async (req, res, next) => {
+app.delete('/api/cart/:productId', async (req, res, next) => {
   try {
-    const userId = getUserId(req);
+    const userId = getMvpUserId(req);
     const { productId } = req.params;
     const size = normalizeSize(req.query?.size);
 

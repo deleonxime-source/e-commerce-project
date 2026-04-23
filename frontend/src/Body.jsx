@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from './api/api.js';
+import { useIsAdmin } from './hooks/useIsAdmin.js';
 import AnnouncementBar from './components/home/AnnouncementBar.jsx';
 import CategoryFilter from './components/home/CategoryFilter.jsx';
 import ProductCard from './components/products/ProductCard.jsx';
@@ -16,6 +17,7 @@ const Home = () => {
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [loading, setLoading] = useState(true);
+  const isAdmin = useIsAdmin();
 
   const fetchProducts = async () => {
     try {
@@ -68,10 +70,12 @@ const Home = () => {
                 <span>Explore</span>
                 <span className="arrow">→</span>
               </Link>
-              <Link to="/admin" className="hero__cta">
-                <span>Admin</span>
-                <span className="arrow">→</span>
-              </Link>
+              {isAdmin && (
+                <Link to="/admin" className="hero__cta">
+                  <span>Admin</span>
+                  <span className="arrow">→</span>
+                </Link>
+              )}
             </div>
           </div>
         </div>
