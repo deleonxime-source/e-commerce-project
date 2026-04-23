@@ -119,6 +119,7 @@ function ProductDetail() {
 
       await api.post('/api/cart', {
         productId: product.id,
+        size: selectedSize,
         quantity: 1,
       });
 
