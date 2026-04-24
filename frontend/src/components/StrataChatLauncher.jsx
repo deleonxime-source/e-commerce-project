@@ -13,6 +13,12 @@ function ensureStrataWidget() {
   if (!document.querySelector('strata-chat')) {
     const widget = document.createElement('strata-chat');
     widget.setAttribute('workspace', 'support-bot');
+    widget.setAttribute('title', 'Support');
+    widget.setAttribute('intro', 'Hi! How can I help you today?');
+    widget.setAttribute(
+      'pills',
+      '["Where is my order?", "Sizing help", "Return policy"]'
+    );
     document.body.appendChild(widget);
   }
 }
