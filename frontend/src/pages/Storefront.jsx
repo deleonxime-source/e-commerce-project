@@ -56,11 +56,8 @@ function Storefront() {
         <div className="hero__editorial">
           <video
             className="hero__video"
-            src="/videos/hero.mp4"
-            autoPlay
-            loop
-            muted
-            playsInline
+            src="/videos/hero.gif"
+            alt="Hero video"
           />
 
           <div className="hero__overlay" />
