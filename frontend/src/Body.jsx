@@ -56,7 +56,7 @@ const Home = () => {
     {/* Background video */}
     <video
       className="hero__video"
-      src="/videos/hero.mp4"
+      src="/videos/hero.gif"
       autoPlay
       loop
       muted
