@@ -53,57 +53,48 @@ const Home = () => {
   return (
     <main className="body">
       <section className="hero">
-        <div className="hero__editorial">
-          <video
-            className="hero__video"
-            src="/videos/hero.mp4"
-            autoPlay
-            loop
-            muted
-            playsInline
-          />
-
-<<<<<<< HEAD
-    {/* Background video */}
+  <div className="hero__editorial">
     <video
       className="hero__video"
-      src="/videos/hero.gif"
+      src="/videos/hero.mp4"
       autoPlay
       loop
       muted
       playsInline
     />
-=======
-          <div className="hero__overlay" />
->>>>>>> 2cc3a882a8637b27955ef94e50a8a26755421032
 
-          <div className="hero__content">
-            <div>
-              <p className="hero__season">SS — 2026</p>
-              <h1 className="hero__headline">
-                CORPS
-                <span className="diamond">◆</span>
-                OBJECT
-              </h1>
-            </div>
-            <div>
-              <p className="hero__collection-label">The new collection</p>
-              <div className="hero__actions">
-                <Link to="/products" className="hero__cta">
-                  <span>Explore</span>
-                  <span className="arrow">→</span>
-                </Link>
-                {isAdmin && (
-                  <Link to="/admin" className="hero__cta">
-                    <span>Admin</span>
-                    <span className="arrow">→</span>
-                  </Link>
-                )}
-              </div>
-            </div>
-          </div>
+    <div className="hero__overlay" />
+
+    <div className="hero__content">
+      <div>
+        <p className="hero__season">SS — 2026</p>
+        <h1 className="hero__headline">
+          CORPS
+          <span className="diamond">◆</span>
+          OBJECT
+        </h1>
+      </div>
+
+      <div>
+        <p className="hero__collection-label">The new collection</p>
+
+        <div className="hero__actions">
+          <Link to="/products" className="hero__cta">
+            <span>Explore</span>
+            <span className="arrow">→</span>
+          </Link>
+
+          {isAdmin && (
+            <Link to="/admin" className="hero__cta">
+              <span>Admin</span>
+              <span className="arrow">→</span>
+            </Link>
+          )}
         </div>
-      </section>
+      </div>
+    </div>
+  </div>
+        </section>
 
       <AnnouncementBar items={ANNOUNCEMENT_ITEMS} />
 
