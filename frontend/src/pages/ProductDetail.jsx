@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
+import { useAuthContext } from '@asgardeo/auth-react';
 import api from '../api/api.js';
 import ProductGallery from '../components/products/ProductGallery.jsx';
 import SizeSelector from '../components/products/SizeSelector.jsx';
@@ -7,18 +8,22 @@ import SizeSelector from '../components/products/SizeSelector.jsx';
 const SIZE_ORDER = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 const NO_IMAGE_PLACEHOLDER = 'https://via.placeholder.com/1200x1200?text=No+Image';
-  function getImageList(product) {
+
+function getImageList(product) {
   if (!product) return [NO_IMAGE_PLACEHOLDER];
 
-  const single =
-    product.image_url ||
-    (Array.isArray(product.image_urls) && product.image_urls[0]) ||
-    (Array.isArray(product.images) && product.images[0]);
+  const imageUrls = Array.isArray(product.image_urls) ? product.image_urls : [];
+  const fallbackImages = Array.isArray(product.images) ? product.images : [];
 
-  return single ? [single] : [NO_IMAGE_PLACEHOLDER];
+  const list = [
+    product.image_url,
+    ...imageUrls,
+    ...fallbackImages,
+  ];
+
+  const uniqueImages = [...new Set(list.filter(Boolean))];
+  return uniqueImages.length ? uniqueImages : [NO_IMAGE_PLACEHOLDER];
 }
-
-  
 
 function normalizeSizeQuantities(product) {
   if (!product?.size_quantities || typeof product.size_quantities !== 'object') {
@@ -33,6 +38,8 @@ function normalizeSizeQuantities(product) {
 
 function ProductDetail() {
   const { id } = useParams();
+  const location = useLocation();
+  const { state: authState, signIn } = useAuthContext();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -106,6 +113,11 @@ function ProductDetail() {
   async function handleAddToCart() {
     if (!product?.id || !canAddToCart) {
       return;
+    }
+
+    if (!authState.isAuthenticated) {
+      sessionStorage.setItem('returnPath', location.pathname);
+      return signIn();
     }
 
     try {

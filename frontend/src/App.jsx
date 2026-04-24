@@ -6,18 +6,38 @@ import Cart from "./components/cart/Cart.jsx";
 import Body from "./Body.jsx";
 import ProductDetail from "./pages/ProductDetail.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
+import { AccessTokenBridge } from "./auth/AccessTokenBridge.jsx";
+import { PostLoginRedirect } from "./auth/PostLoginRedirect.jsx";
+import { RequireSignIn } from "./auth/RequireSignIn.jsx";
+import { RequireAdmin } from "./auth/RequireAdmin.jsx";
 
 const App = () => {
   return (
     <>
       <BrowserRouter>
+        <AccessTokenBridge />
+        <PostLoginRedirect />
         <Header />
         <Routes>
           <Route path="/" element={<Body />} />
           <Route path="/products" element={<Body />} />
           <Route path="/products/:id" element={<ProductDetail />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/admin" element={<AdminDashboard />} />
+          <Route
+            path="/cart"
+            element={(
+              <RequireSignIn>
+                <Cart />
+              </RequireSignIn>
+            )}
+          />
+          <Route
+            path="/admin"
+            element={(
+              <RequireAdmin>
+                <AdminDashboard />
+              </RequireAdmin>
+            )}
+          />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

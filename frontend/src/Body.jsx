@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from './api/api.js';
+import { useIsAdmin } from './hooks/useIsAdmin.js';
 import AnnouncementBar from './components/home/AnnouncementBar.jsx';
 import CategoryFilter from './components/home/CategoryFilter.jsx';
 import ProductCard from './components/products/ProductCard.jsx';
@@ -16,6 +17,7 @@ const Home = () => {
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [loading, setLoading] = useState(true);
+  const isAdmin = useIsAdmin();
 
   const fetchProducts = async () => {
     try {
@@ -51,8 +53,17 @@ const Home = () => {
   return (
     <main className="body">
       <section className="hero">
-  <div className="hero__editorial">
+        <div className="hero__editorial">
+          <video
+            className="hero__video"
+            src="/videos/hero.mp4"
+            autoPlay
+            loop
+            muted
+            playsInline
+          />
 
+<<<<<<< HEAD
     {/* Background video */}
     <video
       className="hero__video"
@@ -62,39 +73,37 @@ const Home = () => {
       muted
       playsInline
     />
+=======
+          <div className="hero__overlay" />
+>>>>>>> 2cc3a882a8637b27955ef94e50a8a26755421032
 
-    {/* Overlay so text stays readable */}
-    <div className="hero__overlay" />
-
-    {/* Content sits on top */}
-    <div className="hero__content">
-      <div>
-        <p className="hero__season">SS — 2026</p>
-        <h1 className="hero__headline">
-          CORPS
-          <span className="diamond">◆</span>
-          OBJECT
-        </h1>
-      </div>
-      <div>
-        <p className="hero__collection-label">The new collection</p>
-        <div className="hero__actions">
-          <Link to="/products" className="hero__cta">
-            <span>Explore</span>
-            <span className="arrow">→</span>
-          </Link>
-          <Link to="/admin" className="hero__cta">
-            <span>Admin</span>
-            <span className="arrow">→</span>
-          </Link>
+          <div className="hero__content">
+            <div>
+              <p className="hero__season">SS — 2026</p>
+              <h1 className="hero__headline">
+                CORPS
+                <span className="diamond">◆</span>
+                OBJECT
+              </h1>
+            </div>
+            <div>
+              <p className="hero__collection-label">The new collection</p>
+              <div className="hero__actions">
+                <Link to="/products" className="hero__cta">
+                  <span>Explore</span>
+                  <span className="arrow">→</span>
+                </Link>
+                {isAdmin && (
+                  <Link to="/admin" className="hero__cta">
+                    <span>Admin</span>
+                    <span className="arrow">→</span>
+                  </Link>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
-
-  </div>
-</section>
-
-      
+      </section>
 
       <AnnouncementBar items={ANNOUNCEMENT_ITEMS} />
 
@@ -115,7 +124,6 @@ const Home = () => {
           <ProductCard key={product.id} product={product} index={index} />
         ))}
       </section>
-
     </main>
   );
 };
