@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
-import { useAuthContext } from '@asgardeo/auth-react';
+import { useAsgardeo } from '@asgardeo/react';
 import api from '../api/api.js';
 import ProductGallery from '../components/products/ProductGallery.jsx';
 import SizeSelector from '../components/products/SizeSelector.jsx';
@@ -39,7 +39,7 @@ function normalizeSizeQuantities(product) {
 function ProductDetail() {
   const { id } = useParams();
   const location = useLocation();
-  const { state: authState, signIn } = useAuthContext();
+  const { isSignedIn, signIn } = useAsgardeo();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -48,6 +48,13 @@ function ProductDetail() {
   const [selectedSize, setSelectedSize] = useState('M');
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [cartMessage, setCartMessage] = useState('');
+
+  const apiErrorMessage = (err, fallback) => (
+    err?.response?.data?.message
+    || err?.response?.data?.error
+    || err?.response?.data?.detail
+    || fallback
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -115,7 +122,7 @@ function ProductDetail() {
       return;
     }
 
-    if (!authState.isAuthenticated) {
+    if (!isSignedIn) {
       sessionStorage.setItem('returnPath', location.pathname);
       return signIn();
     }
@@ -132,7 +139,7 @@ function ProductDetail() {
 
       setCartMessage('Added to cart.');
     } catch (err) {
-      const message = err?.response?.data?.message || 'Unable to add item to cart.';
+      const message = apiErrorMessage(err, 'Unable to add item to cart.');
       setCartMessage(message);
     } finally {
       setIsAddingToCart(false);

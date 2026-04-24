@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { DataTypes, Sequelize } from 'sequelize';
 import { pathToFileURL } from 'url';
 import * as jose from 'jose';
+import { HARDCODED_ADMIN_EMAIL, HARDCODED_ADMIN_SUB } from '../shared/hardcodedAdmin.js';
 
 dotenv.config();
 
@@ -14,38 +15,74 @@ const ASGARDEO_ISSUER = (process.env.ASGARDEO_ISSUER || `https://api.asgardeo.io
   /\/$/,
   ''
 );
-const ASGARDEO_AUDIENCE = process.env.ASGARDEO_AUDIENCE || 'pxxlcCNeO4eExxVwYEnTRoKJHnEa';
+/** Comma- or semicolon-separated list of valid OAuth client IDs (and optional extra aud strings if your IdP uses them) */
+const ASGARDEO_AUDIENCE = process.env.ASGARDEO_AUDIENCE || '51glAcKfG8PE6NsP8sJ9zr_UAEIa';
 
 const JWKS = jose.createRemoteJWKSet(new URL(JWKS_URI));
 
-const jwtVerifyOptions = {
-  issuer: ASGARDEO_ISSUER,
-  audience: ASGARDEO_AUDIENCE,
-};
-
-function toRoleArray(value) {
-  if (value == null) return [];
-  if (Array.isArray(value)) return value.map((v) => String(v));
-  if (typeof value === 'string') {
-    return value
-      .split(/[,;]/)
-      .map((s) => s.trim())
-      .filter(Boolean);
-  }
-  return [String(value)];
+function acceptedIssuers() {
+  const base = String(ASGARDEO_ISSUER || '').replace(/\/$/, '');
+  const values = [
+    base,
+    `${base}/`,
+    `${base}/oauth2/token`,
+    `${base}/oauth2/token/`,
+  ].filter(Boolean);
+  return [...new Set(values)];
 }
 
-function resolveRolesFromPayload(payload) {
-  if (!payload) return [];
-  return [
-    ...new Set(
-      [
-        ...toRoleArray(payload.groups),
-        ...toRoleArray(payload.roles),
-        ...toRoleArray(payload['http://wso2.org/claims/groups']),
-      ]
-    ),
-  ];
+function listFromAudienceEnv() {
+  return String(ASGARDEO_AUDIENCE)
+    .split(/[,;]/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+/**
+ * WSO2 / Asgardeo may put `aud` on the access token as a string, an array, or a different resource id.
+ * jose is strict; we verify signature + issuer, then require `aud` to overlap with ASGARDEO_AUDIENCE.
+ */
+function isAcceptedAudClaim(aud) {
+  const allowed = listFromAudienceEnv();
+  if (!allowed.length) return true;
+  if (aud == null) return false;
+  const auds = Array.isArray(aud) ? aud : [aud];
+  return auds.some((a) => allowed.includes(String(a)));
+}
+
+async function verifyAsgardeoAccessToken(token) {
+  const { payload } = await jose.jwtVerify(token, JWKS, {
+    issuer: acceptedIssuers(),
+    clockTolerance: 60,
+  });
+  if (!isAcceptedAudClaim(payload.aud)) {
+    const e = new Error(
+      `JWT aud not accepted. Got ${JSON.stringify(payload.aud)}; expected one of: ${listFromAudienceEnv().join(', ')}`
+    );
+    e.code = 'ERR_AUDIENCE';
+    throw e;
+  }
+  return payload;
+}
+
+function isHardcodedAdminPayload(payload) {
+  if (!payload || typeof payload !== 'object') return false;
+  const sub = String(payload.sub || payload.id || '').trim();
+  if (sub && (sub === HARDCODED_ADMIN_SUB || sub.includes(HARDCODED_ADMIN_SUB))) {
+    return true;
+  }
+  const want = HARDCODED_ADMIN_EMAIL.toLowerCase();
+  const email = String(
+    payload.email
+    || payload.preferred_username
+    || payload['http://wso2.org/claims/username']
+    || payload['http://wso2.org/claims/emailaddress']
+    || ''
+  )
+    .toLowerCase()
+    .trim();
+  if (email === want) return true;
+  return false;
 }
 
 // Required JWT auth: verify Bearer with Asgardeo JWKS, set req.userId from payload.sub (and req.auth = payload)
@@ -69,7 +106,7 @@ async function authMiddleware(req, res, next) {
   }
 
   try {
-    const { payload } = await jose.jwtVerify(token, JWKS, jwtVerifyOptions);
+    const payload = await verifyAsgardeoAccessToken(token);
     req.userId = payload.sub;
     req.auth = payload;
     return next();
@@ -95,7 +132,7 @@ async function optionalAuthMiddleware(req, res, next) {
     return next();
   }
   try {
-    const { payload } = await jose.jwtVerify(token, JWKS, jwtVerifyOptions);
+    const payload = await verifyAsgardeoAccessToken(token);
     req.userId = payload.sub;
     req.auth = payload;
   } catch {
@@ -111,7 +148,7 @@ function requireAdminRole(req, res, next) {
       detail: 'Send Authorization: Bearer <access_token>',
     });
   }
-  if (!resolveRolesFromPayload(req.auth).includes('admin')) {
+  if (!isHardcodedAdminPayload(req.auth)) {
     return res.status(403).json({ message: 'Forbidden' });
   }
   next();
@@ -558,7 +595,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/api/auth/profile', authMiddleware, (req, res) => {
-  res.json({ user: { sub: req.userId, roles: resolveRolesFromPayload(req.auth) } });
+  res.json({ user: { sub: req.userId, isAdmin: isHardcodedAdminPayload(req.auth) } });
 });
 
 async function listProducts(req, res, next) {
@@ -568,7 +605,7 @@ async function listProducts(req, res, next) {
       if (!req.userId) {
         return res.status(401).json({ message: 'Unauthorized' });
       }
-      if (!resolveRolesFromPayload(req.auth).includes('admin')) {
+      if (!isHardcodedAdminPayload(req.auth)) {
         return res.status(403).json({ message: 'Forbidden' });
       }
     }
@@ -594,7 +631,7 @@ async function getProductById(req, res, next) {
       if (!req.userId) {
         return res.status(401).json({ message: 'Unauthorized' });
       }
-      if (!resolveRolesFromPayload(req.auth).includes('admin')) {
+      if (!isHardcodedAdminPayload(req.auth)) {
         return res.status(403).json({ message: 'Forbidden' });
       }
     }

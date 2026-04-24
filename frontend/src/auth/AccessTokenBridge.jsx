@@ -1,13 +1,13 @@
 import { useEffect } from 'react';
-import { useAuthContext } from '@asgardeo/auth-react';
+import { useAsgardeo } from '@asgardeo/react';
 import { setAccessTokenGetter } from '../api/api.js';
 
 export function AccessTokenBridge() {
-  const { getAccessToken, state } = useAuthContext();
+  const { getAccessToken } = useAsgardeo();
 
   useEffect(() => {
-    setAccessTokenGetter(() => (state.isAuthenticated ? getAccessToken() : Promise.resolve(null)));
-  }, [getAccessToken, state.isAuthenticated]);
+    setAccessTokenGetter(() => getAccessToken().catch(() => null));
+  }, [getAccessToken]);
 
   return null;
 }

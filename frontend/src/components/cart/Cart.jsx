@@ -8,9 +8,17 @@ function Cart() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [ordering, setOrdering] = useState(false);
+  const [placingOrder, setPlacingOrder] = useState(false);
+  const [returningOrderId, setReturningOrderId] = useState(null);
   const [orderMessage, setOrderMessage] = useState('');
   const [removingProductId, setRemovingProductId] = useState(null);
+
+  const apiErrorMessage = (err, fallback) => (
+    err?.response?.data?.message
+    || err?.response?.data?.error
+    || err?.response?.data?.detail
+    || fallback
+  );
 
   const currency = (value) => Number(value || 0).toFixed(2);
 
@@ -49,8 +57,8 @@ function Cart() {
 
       setItems(cartItems);
       setCartTotal(Number.isFinite(total) ? total : calculateFallbackTotal(cartItems));
-    } catch {
-      setError('Unable to load cart');
+    } catch (err) {
+      setError(apiErrorMessage(err, 'Unable to load cart'));
       setItems([]);
       setCartTotal(0);
     } finally {
@@ -72,8 +80,8 @@ function Cart() {
     loadOrders();
   }, []);
 
-  async function handleRemove(productId) {
-    const size = String(arguments[1] || '').toUpperCase();
+  async function handleRemove(productId, sizeValue) {
+    const size = String(sizeValue || '').toUpperCase();
 
     if (!size) {
       setError('Missing size for selected cart item.');
@@ -87,7 +95,7 @@ function Cart() {
       await api.delete(`/api/cart/${productId}`, { params: { size } });
       await loadCart();
     } catch (err) {
-      const message = err?.response?.data?.message || 'Unable to remove item from cart';
+      const message = apiErrorMessage(err, 'Unable to remove item from cart');
       setError(message);
     } finally {
       setRemovingProductId(null);
@@ -95,10 +103,10 @@ function Cart() {
   }
 
   async function handlePlaceOrder() {
-    if (!items.length || ordering) return;
+    if (!items.length || placingOrder) return;
 
     try {
-      setOrdering(true);
+      setPlacingOrder(true);
       setError('');
       setOrderMessage('');
 
@@ -109,35 +117,36 @@ function Cart() {
       setOrderMessage(`Order #${orderId} placed. Total: $${currency(orderTotal)}.`);
       await Promise.all([loadCart(), loadOrders()]);
     } catch (err) {
-      const message = err?.response?.data?.message || 'Unable to place order';
+      const message = apiErrorMessage(err, 'Unable to place order');
       setError(message);
     } finally {
-      setOrdering(false);
+      setPlacingOrder(false);
     }
   }
 
   async function handleReturnOrder(orderId) {
     try {
-      setOrdering(true);
+      setReturningOrderId(orderId);
       setError('');
       await api.post(`/api/orders/${orderId}/return`);
       await Promise.all([loadCart(), loadOrders()]);
     } catch (err) {
-      const message = err?.response?.data?.message || 'Unable to return order';
+      const message = apiErrorMessage(err, 'Unable to return order');
       setError(message);
     } finally {
-      setOrdering(false);
+      setReturningOrderId(null);
     }
   }
 
   if (loading) return <main className="cart-page"><p className="grid-message">Loading cart...</p></main>;
-  if (error) return <main className="cart-page"><p className="grid-message">{error}</p></main>;
 
   return (
     <main className="cart-page">
       <div className="detail-topbar">
         <Link to="/products" className="detail-back-link">← Back to products</Link>
       </div>
+
+      {error && <p className="cart-note">{error}</p>}
 
       <h1 className="cart-title">Your Cart</h1>
 
@@ -174,9 +183,9 @@ function Cart() {
               type="button"
               className="admin-primary"
               onClick={handlePlaceOrder}
-              disabled={ordering || items.length === 0}
+              disabled={placingOrder || items.length === 0}
             >
-              {ordering ? 'Placing Order...' : 'Place Order'}
+              {placingOrder ? 'Placing Order...' : 'Place Order'}
             </button>
           </div>
         </>
@@ -223,9 +232,9 @@ function Cart() {
                           type="button"
                           className="admin-secondary"
                           onClick={() => handleReturnOrder(order.id)}
-                          disabled={ordering}
+                          disabled={placingOrder || returningOrderId === order.id}
                         >
-                          Return
+                          {returningOrderId === order.id ? 'Returning...' : 'Return'}
                         </button>
                       )}
                     </td>

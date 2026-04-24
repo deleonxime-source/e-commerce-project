@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import api from './api/api.js';
-import { useIsAdmin } from './hooks/useIsAdmin.js';
-import AnnouncementBar from './components/home/AnnouncementBar.jsx';
-import CategoryFilter from './components/home/CategoryFilter.jsx';
-import ProductCard from './components/products/ProductCard.jsx';
+import api from '../api/api.js';
+import { useIsAdmin } from '../hooks/useIsAdmin.js';
+import AnnouncementBar from '../components/home/AnnouncementBar.jsx';
+import CategoryFilter from '../components/home/CategoryFilter.jsx';
+import ProductCard from '../components/products/ProductCard.jsx';
 
 const ANNOUNCEMENT_ITEMS = [
   'Free shipping over $300',
@@ -12,7 +12,7 @@ const ANNOUNCEMENT_ITEMS = [
   'Returns within 30 days',
 ];
 
-const Home = () => {
+function Storefront() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -114,6 +114,6 @@ const Home = () => {
       </section>
     </main>
   );
-};
+}
 
-export default Home;
+export default Storefront;

@@ -30,7 +30,8 @@ body {
   justify-content: space-between;
   position: sticky;
   top: 0;
-  z-index: 100;
+  /* Above page chrome (e.g. AI launcher z-index 1200) so header actions receive clicks. */
+  z-index: 5000;
 }
 
 .navbar__left {
@@ -953,6 +954,96 @@ body {
 
 .cart-note {
   margin-top: 14px;
+}
+
+.ai-agent-launcher {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 1200;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border: 1px solid rgba(17, 17, 17, 0.14);
+  border-radius: 999px;
+  background: linear-gradient(135deg, #111111 0%, #2d2d2d 100%);
+  color: #ffffff;
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+}
+
+.ai-agent-close {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 2147483647;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 11px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  background: rgba(17, 17, 17, 0.92);
+  color: #ffffff;
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.24);
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+}
+
+.ai-agent-close:hover {
+  background: rgba(28, 28, 28, 0.96);
+}
+
+.ai-agent-close:active {
+  transform: translateY(1px);
+}
+
+.ai-agent-launcher:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 22px 42px rgba(0, 0, 0, 0.24);
+}
+
+.ai-agent-launcher--open {
+  background: linear-gradient(135deg, #1a4d3b 0%, #123229 100%);
+}
+
+.ai-agent-launcher:active {
+  transform: translateY(0);
+}
+
+.ai-agent-launcher__pulse {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #8ff3c8;
+  box-shadow: 0 0 0 0 rgba(143, 243, 200, 0.6);
+  animation: ai-agent-pulse 2.2s infinite;
+}
+
+.ai-agent-launcher__label {
+  white-space: nowrap;
+}
+
+@keyframes ai-agent-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(143, 243, 200, 0.45);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(143, 243, 200, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(143, 243, 200, 0);
+  }
 }
 
 .cart-summary {

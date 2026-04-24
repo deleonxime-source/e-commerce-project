@@ -1,14 +1,14 @@
 import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuthContext } from '@asgardeo/auth-react';
+import { useAsgardeo } from '@asgardeo/react';
 
 export function PostLoginRedirect() {
-  const { state } = useAuthContext();
+  const { isLoading, isSignedIn } = useAsgardeo();
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    if (state.isLoading || !state.isAuthenticated) return;
+    if (isLoading || !isSignedIn) return;
 
     const returnPath = sessionStorage.getItem('returnPath');
     if (!returnPath) return;
@@ -21,7 +21,7 @@ export function PostLoginRedirect() {
 
     sessionStorage.removeItem('returnPath');
     navigate(returnPath, { replace: true });
-  }, [state.isLoading, state.isAuthenticated, navigate, location.pathname, location.search]);
+  }, [isLoading, isSignedIn, navigate, location.pathname, location.search]);
 
   return null;
 }
