@@ -52,43 +52,47 @@ function Storefront() {
 
   return (
     <main className="body">
-      <section className="hero">
-        <div className="hero__editorial">
-          <video
-            className="hero__video"
-            src="/videos/hero.gif"
-            alt="Hero video"
-          />
+<section className="hero">
+  <div className="hero__editorial">
+    <img
+      className="hero__video"
+      src="/videos/hero.gif"
+      alt="Hero"
+    />
 
-          <div className="hero__overlay" />
+    <div className="hero__content">
+      <div className="hero__group">
+        <div>
+          <p className="hero__season">S/S 2026</p>
+          <h1 className="hero__headline">
+            CORPS
+            <span className="diamond">◆</span>
+            OBJECT
+          </h1>
+        </div>
 
-          <div className="hero__content">
-            <div>
-              <p className="hero__season">SS — 2026</p>
-              <h1 className="hero__headline">
-                CORPS
-                <span className="diamond">◆</span>
-                OBJECT
-              </h1>
-            </div>
-            <div>
-              <p className="hero__collection-label">The new collection</p>
-              <div className="hero__actions">
-                <Link to="/products" className="hero__cta">
-                  <span>Explore</span>
-                  <span className="arrow">→</span>
-                </Link>
-                {isAdmin && (
-                  <Link to="/admin" className="hero__cta">
-                    <span>Admin</span>
-                    <span className="arrow">→</span>
-                  </Link>
-                )}
-              </div>
-            </div>
+        <div>
+          <p className="hero__collection-label">SHOP NEW COLLECTION</p>
+
+          <div className="hero__actions">
+            <Link to="/products" className="hero__cta">
+              <span>EXPLORE</span>
+              <span className="arrow">→</span>
+            </Link>
+
+            {isAdmin && (
+              <Link to="/admin" className="hero__cta">
+                <span>Admin</span>
+                <span className="arrow">→</span>
+              </Link>
+            )}
           </div>
         </div>
-      </section>
+      </div>
+    </div>
+  </div>
+</section>
+
 
       <AnnouncementBar items={ANNOUNCEMENT_ITEMS} />
 
