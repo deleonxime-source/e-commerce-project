@@ -4,6 +4,7 @@ import Header from "./components/layout/Header.jsx";
 import Footer from "./components/layout/Footer.jsx";
 import Cart from "./components/cart/Cart.jsx";
 import Storefront from "./pages/Storefront.jsx";
+import Products from "./pages/Products.jsx";
 import ProductDetail from "./pages/ProductDetail.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
 import { AccessTokenBridge } from "./auth/AccessTokenBridge.jsx";
@@ -24,7 +25,7 @@ const App = () => {
       <Header />
       <Routes>
         <Route path="/" element={<Storefront />} />
-        <Route path="/products" element={<Storefront />} />
+        <Route path="/products" element={<Products />} />
         <Route path="/products/:id" element={<ProductDetail />} />
         <Route
           path="/cart"
