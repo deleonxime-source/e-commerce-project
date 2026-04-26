@@ -296,6 +296,22 @@ text-align: center;
   margin-left: 10px;
 }
 
+.editorial-block--image-only {
+  display: flex;
+  justify-content: center;
+  padding: 80px 40px;
+}
+
+.editorial-block--image-only .editorial-block__image {
+  padding: 0;
+}
+
+.editorial-block--image-only img {
+  margin-left: 70px;
+  width: 90%;
+  height: 90vh;
+  object-fit: cover;
+}
 
 
 /* ANNOUNCEMENT BAR */
@@ -702,4 +718,8 @@ text-align: center;
   background: #111111;
   color: #ffffff;
   border: 0;
+}
+
+.footer {
+  text-align: center;
 }
