@@ -5,6 +5,7 @@ import { useIsAdmin } from '../hooks/useIsAdmin.js';
 import AnnouncementBar from '../components/home/AnnouncementBar.jsx';
 import CategoryFilter from '../components/home/CategoryFilter.jsx';
 import ProductCard from '../components/products/ProductCard.jsx';
+import EditorialBlock from "../components/home/EditorialBlock";
 
 const ANNOUNCEMENT_ITEMS = [
   'Free shipping over $300',
@@ -95,7 +96,6 @@ function Storefront() {
 
 
       <AnnouncementBar items={ANNOUNCEMENT_ITEMS} />
-
       <CategoryFilter
         categories={categories}
         selectedCategory={selectedCategory}
@@ -113,6 +113,7 @@ function Storefront() {
           <ProductCard key={product.id} product={product} index={index} />
         ))}
       </section>
+      <EditorialBlock />
     </main>
   );
 }
