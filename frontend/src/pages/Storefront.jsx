@@ -109,7 +109,7 @@ function Storefront() {
         {!loading && filteredProducts.length === 0 && (
           <p className="grid-message">No products found.</p>
         )}
-        {!loading && filteredProducts.map((product, index) => (
+        {!loading && filteredProducts.slice(0,4).map((product, index) => (
           <ProductCard key={product.id} product={product} index={index} />
         ))}
       </section>
