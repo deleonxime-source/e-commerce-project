@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAsgardeo } from '@asgardeo/react';
 import { useIsAdmin } from '../../hooks/useIsAdmin.js';
+import Button from '@mui/material/Button';
 
 function displayNameFromIdToken(token) {
   if (!token || typeof token !== 'object') return 'Account';
@@ -100,14 +101,46 @@ function Header() {
         {isSignedIn ? (
           <span className="navbar__user">
             <span className="navbar__name">{displayName}</span>
-            <button type="button" className="navbar__link-button" onClick={handleSignOut}>
+            <Button
+              variant="text"
+              size="small"
+              onClick={handleSignOut}
+              sx={{
+                minWidth: 'auto',
+                padding: 0,
+                fontFamily: '"Space Mono", monospace',
+                fontSize: '9px',
+                letterSpacing: '0.15em',
+                textTransform: 'uppercase',
+                textDecoration: 'underline',
+                textUnderlineOffset: '3px',
+                color: '#555555',
+                '&:hover': { backgroundColor: 'transparent', color: '#111111', textDecoration: 'underline' },
+              }}
+            >
               Sign out
-            </button>
+            </Button>
           </span>
         ) : (
-          <button type="button" className="navbar__link-button" onClick={openSignIn}>
+          <Button
+            variant="text"
+            size="small"
+            onClick={openSignIn}
+            sx={{
+              minWidth: 'auto',
+              padding: 0,
+              fontFamily: '"Space Mono", monospace',
+              fontSize: '9px',
+              letterSpacing: '0.15em',
+              textTransform: 'uppercase',
+              textDecoration: 'underline',
+              textUnderlineOffset: '3px',
+              color: '#555555',
+              '&:hover': { backgroundColor: 'transparent', color: '#111111', textDecoration: 'underline' },
+            }}
+          >
             Sign in
-          </button>
+          </Button>
         )}
       </nav>
     </header>

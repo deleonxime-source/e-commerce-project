@@ -4,6 +4,7 @@ import api from '../api/api.js';
 import AdminImageInputRow from '../components/admin/AdminImageInputRow.jsx';
 import AdminSizeQuantities from '../components/admin/AdminSizeQuantities.jsx';
 import AdminProductListItem from '../components/admin/AdminProductListItem.jsx';
+import Button from '@mui/material/Button';
 
 const SIZE_OPTIONS = ['XS', 'S', 'M', 'L', 'XL'];
 const ORDER_STATUS_OPTIONS = [
@@ -130,6 +131,11 @@ function validateForm(form) {
 function AdminDashboard() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [creatingCategory, setCreatingCategory] = useState(false);
+  const [editingCategoryId, setEditingCategoryId] = useState(null);
+  const [editingCategoryName, setEditingCategoryName] = useState('');
+  const [updatingCategoryId, setUpdatingCategoryId] = useState(null);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [ordersLoading, setOrdersLoading] = useState(true);
@@ -181,6 +187,59 @@ function AdminDashboard() {
     fetchCategories();
     fetchOrders();
   }, []);
+
+  async function handleCreateCategory(event) {
+    event.preventDefault();
+    const name = newCategoryName.trim();
+    if (!name) {
+      setError('Category name is required.');
+      return;
+    }
+
+    try {
+      setCreatingCategory(true);
+      setError('');
+      await api.post('/api/categories', { name });
+      setNewCategoryName('');
+      await fetchCategories();
+    } catch (err) {
+      const message = err?.response?.data?.message || 'Unable to create category';
+      setError(message);
+    } finally {
+      setCreatingCategory(false);
+    }
+  }
+
+  function startEditCategory(category) {
+    setError('');
+    setEditingCategoryId(category.id);
+    setEditingCategoryName(String(category.name || ''));
+  }
+
+  function cancelEditCategory() {
+    setEditingCategoryId(null);
+    setEditingCategoryName('');
+  }
+
+  async function handleUpdateCategory(categoryId) {
+    const name = editingCategoryName.trim();
+    if (!name) {
+      setError('Category name is required.');
+      return;
+    }
+    try {
+      setUpdatingCategoryId(categoryId);
+      setError('');
+      await api.put(`/api/categories/${categoryId}`, { name });
+      cancelEditCategory();
+      await fetchCategories();
+    } catch (err) {
+      const message = err?.response?.data?.message || 'Unable to update category';
+      setError(message);
+    } finally {
+      setUpdatingCategoryId(null);
+    }
+  }
 
   function resetForm() {
     setForm(createEmptyForm());
@@ -456,9 +515,9 @@ function AdminDashboard() {
           <div className="admin-panel__header">
             <h2>{form.id ? `Edit Product #${form.id}` : 'Add Product'}</h2>
             {form.id && (
-              <button type="button" className="admin-secondary" onClick={resetForm}>
+              <Button variant="outlined" onClick={resetForm} sx={{ fontFamily: '"Space Mono", monospace' }}>
                 New Product
-              </button>
+              </Button>
             )}
           </div>
 
@@ -548,14 +607,15 @@ function AdminDashboard() {
                 />
               ))}
 
-              <button
+              <Button
                 type="button"
-                className="admin-secondary"
+                variant="outlined"
                 onClick={addImageInput}
                 disabled={form.image_urls.length >= MAX_IMAGES}
+                sx={{ fontFamily: '"Space Mono", monospace' }}
               >
                 Add Another Photo
-              </button>
+              </Button>
             </fieldset>
 
             <fieldset className="admin-fieldset">
@@ -569,9 +629,15 @@ function AdminDashboard() {
               <p className="admin-stock-total">Total stock: {totalStock}</p>
             </fieldset>
 
-            <button className="admin-primary" type="submit" disabled={saving}>
+            <Button
+              className="admin-primary"
+              variant="contained"
+              type="submit"
+              disabled={saving}
+              sx={{ fontFamily: '"Space Mono", monospace', backgroundColor: '#111111', '&:hover': { backgroundColor: '#111111' } }}
+            >
               {saving ? 'Saving...' : form.id ? 'Save Product' : 'Create Product'}
-            </button>
+            </Button>
           </form>
         </article>
 
@@ -596,6 +662,107 @@ function AdminDashboard() {
             ))}
           </div>
         </article>
+      </section>
+
+      <section className="admin-panel admin-panel--orders" style={{ marginTop: 14 }}>
+        <div className="admin-panel__header">
+          <h2>Categories</h2>
+          <p>{`${categories.length} total`}</p>
+        </div>
+
+        <div className="admin-form">
+          {categories.length === 0 ? (
+            <p className="admin-empty">No categories found.</p>
+          ) : (
+            <div className="admin-products-list" style={{ borderTop: '0.5px solid rgba(0, 0, 0, 0.12)' }}>
+              {categories.map((category) => {
+                const isEditing = editingCategoryId === category.id;
+                const isUpdating = updatingCategoryId === category.id;
+                return (
+                  <div key={category.id} className="admin-product-item">
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="admin-product-item__name">
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            value={editingCategoryName}
+                            onChange={(event) => setEditingCategoryName(event.target.value)}
+                            maxLength={80}
+                            disabled={isUpdating}
+                            aria-label={`Edit category ${category.id}`}
+                            style={{ width: '100%' }}
+                          />
+                        ) : (
+                          category.name
+                        )}
+                      </div>
+                      <div className="admin-product-item__meta">Category #{category.id}</div>
+                    </div>
+
+                    <div className="admin-product-item__actions">
+                      {isEditing ? (
+                        <>
+                          <Button
+                            type="button"
+                            variant="contained"
+                            onClick={() => handleUpdateCategory(category.id)}
+                            disabled={isUpdating}
+                            sx={{ fontFamily: '"Space Mono", monospace', backgroundColor: '#111111', '&:hover': { backgroundColor: '#111111' } }}
+                          >
+                            {isUpdating ? 'Saving...' : 'Save'}
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outlined"
+                            onClick={cancelEditCategory}
+                            disabled={isUpdating}
+                            sx={{ fontFamily: '"Space Mono", monospace' }}
+                          >
+                            Cancel
+                          </Button>
+                        </>
+                      ) : (
+                        <Button
+                          type="button"
+                          variant="outlined"
+                          onClick={() => startEditCategory(category)}
+                          sx={{ fontFamily: '"Space Mono", monospace' }}
+                        >
+                          Edit
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          <form onSubmit={handleCreateCategory} style={{ display: 'grid', gap: 12 }}>
+            <label>
+              Add New Category
+              <input
+                type="text"
+                value={newCategoryName}
+                onChange={(event) => setNewCategoryName(event.target.value)}
+                maxLength={80}
+                placeholder="e.g. accessories"
+                disabled={creatingCategory}
+                required
+              />
+            </label>
+
+            <Button
+              className="admin-primary"
+              variant="contained"
+              type="submit"
+              disabled={creatingCategory}
+              sx={{ fontFamily: '"Space Mono", monospace', backgroundColor: '#111111', '&:hover': { backgroundColor: '#111111' } }}
+            >
+              {creatingCategory ? 'Creating...' : 'Create Category'}
+            </Button>
+          </form>
+        </div>
       </section>
 
       <section className="admin-panel admin-panel--orders">

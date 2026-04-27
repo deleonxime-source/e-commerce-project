@@ -1178,6 +1178,68 @@ app.get('/api/categories', async (req, res, next) => {
   }
 });
 
+app.post('/api/categories', authMiddleware, requireAdminRole, async (req, res, next) => {
+  try {
+    const rawName = String(req.body?.name || '').trim();
+    if (!rawName) {
+      return res.status(400).json({ message: 'Category name is required' });
+    }
+    if (rawName.length > 80) {
+      return res.status(400).json({ message: 'Category name must be 80 characters or fewer' });
+    }
+
+    const name = rawName.toLowerCase();
+
+    const result = await query(
+      `INSERT INTO categories (name)
+       VALUES ($1)
+       ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+       RETURNING *`,
+      [name]
+    );
+
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.put('/api/categories/:id', authMiddleware, requireAdminRole, async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id < 1) {
+      return res.status(400).json({ message: 'Valid category id is required' });
+    }
+
+    const rawName = String(req.body?.name || '').trim();
+    if (!rawName) {
+      return res.status(400).json({ message: 'Category name is required' });
+    }
+    if (rawName.length > 80) {
+      return res.status(400).json({ message: 'Category name must be 80 characters or fewer' });
+    }
+
+    const name = rawName.toLowerCase();
+
+    const existing = await query('SELECT id FROM categories WHERE id = $1', [id]);
+    if (!existing.rows.length) {
+      return res.status(404).json({ message: 'Category not found' });
+    }
+
+    const result = await query(
+      `UPDATE categories
+       SET name = $1
+       WHERE id = $2
+       RETURNING *`,
+      [name, id]
+    );
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    next(err);
+  }
+});
+
 app.use(errorHandler);
 
 export async function startServer() {
