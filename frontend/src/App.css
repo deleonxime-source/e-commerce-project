@@ -1221,7 +1221,7 @@ body {
 
 .chat-launcher-dock {
   position: fixed;
-  right: 16px;
+  right: 140px;
   top: 62px;
   transform: none;
   z-index: 6500;
