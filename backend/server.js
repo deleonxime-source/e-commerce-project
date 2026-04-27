@@ -354,7 +354,7 @@ export async function initDatabase() {
     {
       id: 5,
       name: 'Sheer Long Sleeve Top',
-      category_name: 'shirt',
+      category_name: 'outerwear',
       description: 'Cool, sheer long sleeve top with flowy fit.',
       price: 85.99,
       image_url: '/images/products/product-5.jpg',
@@ -481,6 +481,38 @@ export async function initDatabase() {
       image_url: '/images/products/product-17.jpg',
       image_urls: ['/images/products/product-17.jpg'],
       size_quantities: { XS: 11, S: 16, M: 13, L: 21, XL: 12},
+},
+
+{
+          id: 18,
+      name: 'Demin Vest with Saftey Pin Buckles ',
+      category_name: 'outerwear',
+      description:'Denim Jacket with safety pin buckles.',
+      price: 105.99,
+      image_url: '/images/products/product-18.jpg',
+      image_urls: ['/images/products/product-18.jpg'],
+      size_quantities: { XS: 5, S: 17, M: 11, L: 21, XL: 2},
+},
+
+{
+          id: 19,
+      name: 'Distressed Denim Vest',
+      category_name: 'shirt',
+      description:'Denim vest with distressed detailing.',
+      price: 79.99,
+      image_url: '/images/products/product-19.jpg',
+      image_urls: ['/images/products/product-19.jpg'],
+      size_quantities: { XS: 15, S: 9, M: 12, L: 12, XL: 10},
+},
+{
+          id: 20,
+      name: 'Belted Sleeveless Denim Jacket ',
+      category_name: 'outerwear',
+      description:'Denim jacket with a belted, sleeveless design.',
+      price: 205.99,
+      image_url: '/images/products/product-20.jpg',
+      image_urls: ['/images/products/product-20.jpg'],
+      size_quantities: { XS: 10, S: 15, M: 7, L: 19, XL: 6},
 },
 
   ];
