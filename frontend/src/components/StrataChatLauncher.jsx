@@ -36,7 +36,7 @@ function removeStrataWidget() {
 }
 
 /**
- * Floating launcher for the Strata support widget (CSS in App.css: `.ai-agent-launcher`, etc.).
+ * Fixed side launcher for the Strata support widget.
  */
 export function StrataChatLauncher() {
   const [isOpen, setIsOpen] = useState(false);
@@ -74,30 +74,20 @@ export function StrataChatLauncher() {
     setIsOpen(true);
   }
 
+  const buttonLabel = isOpen ? 'Close Chat' : 'Need Help?';
+
   return (
-    <>
+    <div className="chat-launcher-dock">
       <button
         type="button"
-        className={`ai-agent-launcher ${isOpen ? 'ai-agent-launcher--open' : ''}`}
+        className={`chat-launcher ${isOpen ? 'chat-launcher--open' : ''}`}
         onClick={toggleAgent}
-        aria-label={isOpen ? 'Open AI agent' : 'Open AI agent'}
-        title={isOpen ? 'Open AI agent' : 'Open AI agent'}
+        aria-label={buttonLabel}
+        title={buttonLabel}
       >
-        <span className="ai-agent-launcher__pulse" aria-hidden="true" />
-        <span className="ai-agent-launcher__label">{isOpen ? 'Open AI agent' : 'Open AI agent'}</span>
+        <span className="chat-launcher__pulse" aria-hidden="true" />
+        <span className="chat-launcher__label">{buttonLabel}</span>
       </button>
-
-      {isOpen && (
-        <button
-          type="button"
-          className="ai-agent-close"
-          onClick={closeAgent}
-          aria-label="Close AI agent"
-          title="Close AI agent"
-        >
-          Close AI
-        </button>
-      )}
-    </>
+    </div>
   );
 }

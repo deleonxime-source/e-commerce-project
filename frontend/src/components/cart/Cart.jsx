@@ -1,6 +1,16 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../api/api.js';
+import Button from '@mui/material/Button';
+import Paper from '@mui/material/Paper';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+
+const NO_IMAGE_PLACEHOLDER = 'https://via.placeholder.com/240x240?text=No+Image';
 
 function Cart() {
   const [items, setItems] = useState([]);
@@ -40,6 +50,11 @@ function Cart() {
       default:
         return 'Order Placed';
     }
+  };
+
+  const getCartItemImage = (item) => {
+    const galleryImage = Array.isArray(item?.image_urls) ? item.image_urls.find(Boolean) : '';
+    return item?.image_url || galleryImage || NO_IMAGE_PLACEHOLDER;
   };
 
   const loadCart = async () => {
@@ -157,36 +172,63 @@ function Cart() {
           <div className="cart-list">
             {items.map((item) => (
               <div key={`${item.product_id || item.id}-${item.size || 'NA'}`} className="cart-item">
-                <div>
+                <img
+                  src={getCartItemImage(item)}
+                  alt={item.name || 'Cart item'}
+                  className="cart-item__image"
+                />
+
+                <div className="cart-item__content">
                   <p className="cart-item__name">{item.name || 'Item'}</p>
-                  <p className="cart-item__meta">Size: {item.size || 'M'}</p>
-                  <p className="cart-item__meta">Qty: {item.quantity || 1}</p>
-                  <p className="cart-item__meta">Unit: ${currency(item.price)}</p>
-                  <p className="cart-item__meta">Line total: ${currency(item.line_total || Number(item.price) * Number(item.quantity || 1))}</p>
+                  <p className="cart-item__meta">{item.category_name || 'Uncategorized'}</p>
+                  <div className="cart-item__details">
+                    <p className="cart-item__meta">Size: {item.size || 'M'}</p>
+                    <p className="cart-item__meta">Qty: {item.quantity || 1}</p>
+                    <p className="cart-item__meta">Unit: ${currency(item.price)}</p>
+                    <p className="cart-item__line-total">Line total: ${currency(item.line_total || Number(item.price) * Number(item.quantity || 1))}</p>
+                  </div>
                 </div>
 
-                <button
+                <Button
                   type="button"
-                  className="admin-danger"
+                  variant="outlined"
+                  size="small"
                   onClick={() => handleRemove(item.product_id || item.id, item.size)}
                   disabled={removingProductId === `${item.product_id || item.id}-${item.size || 'M'}`}
+                  sx={{
+                    fontFamily: '"Space Mono", monospace',
+                    fontSize: '10px',
+                    letterSpacing: '0.08em',
+                    borderColor: 'rgba(0, 0, 0, 0.3)',
+                    color: '#333333',
+                    minWidth: 92,
+                    '&:hover': { borderColor: '#111111', backgroundColor: 'rgba(0, 0, 0, 0.03)' },
+                  }}
                 >
                   {removingProductId === `${item.product_id || item.id}-${item.size || 'M'}` ? 'Removing...' : 'Remove'}
-                </button>
+                </Button>
               </div>
             ))}
           </div>
 
           <div className="cart-summary">
             <p className="cart-summary__total">Cart total: ${currency(cartTotal)}</p>
-            <button
+            <Button
               type="button"
-              className="admin-primary"
+              variant="contained"
+              size="small"
               onClick={handlePlaceOrder}
               disabled={placingOrder || items.length === 0}
+              sx={{
+                fontFamily: '"Space Mono", monospace',
+                fontSize: '10px',
+                letterSpacing: '0.08em',
+                backgroundColor: '#111111',
+                '&:hover': { backgroundColor: '#111111' },
+              }}
             >
               {placingOrder ? 'Placing Order...' : 'Place Order'}
-            </button>
+            </Button>
           </div>
         </>
       )}
@@ -198,51 +240,60 @@ function Cart() {
         {orders.length === 0 ? (
           <p className="cart-empty">No orders yet.</p>
         ) : (
-          <div className="orders-table-wrap">
-            <table className="orders-table">
-              <thead>
-                <tr>
-                  <th>Order #</th>
-                  <th>Date</th>
-                  <th>Status</th>
-                  <th>Total</th>
-                  <th>Details</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
+          <TableContainer component={Paper} sx={{ border: '0.5px solid rgba(0, 0, 0, 0.12)', borderRadius: '10px', boxShadow: 'none' }}>
+            <Table size="small" aria-label="orders table">
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ fontFamily: '"Space Mono", monospace', fontSize: '10px', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Order #</TableCell>
+                  <TableCell sx={{ fontFamily: '"Space Mono", monospace', fontSize: '10px', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Date</TableCell>
+                  <TableCell sx={{ fontFamily: '"Space Mono", monospace', fontSize: '10px', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Status</TableCell>
+                  <TableCell sx={{ fontFamily: '"Space Mono", monospace', fontSize: '10px', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Total</TableCell>
+                  <TableCell sx={{ fontFamily: '"Space Mono", monospace', fontSize: '10px', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Details</TableCell>
+                  <TableCell sx={{ fontFamily: '"Space Mono", monospace', fontSize: '10px', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Action</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
                 {orders.map((order) => (
-                  <tr key={order.id}>
-                    <td>{order.id}</td>
-                    <td>{new Date(order.created_at).toLocaleString()}</td>
-                    <td>{order.status_label || getOrderStatusLabel(order.status)}</td>
-                    <td>${currency(order.total_amount)}</td>
-                    <td>
+                  <TableRow key={order.id} hover>
+                    <TableCell>{order.id}</TableCell>
+                    <TableCell>{new Date(order.created_at).toLocaleString()}</TableCell>
+                    <TableCell>{order.status_label || getOrderStatusLabel(order.status)}</TableCell>
+                    <TableCell>${currency(order.total_amount)}</TableCell>
+                    <TableCell>
                       {(order.items || []).map((item) => (
                         <div key={item.id} className="orders-table__detail">
                           {item.product_name} ({item.size || 'M'}) × {item.quantity} (${currency(item.unit_price)})
                         </div>
                       ))}
-                    </td>
-                    <td>
+                    </TableCell>
+                    <TableCell>
                       {String(order.status || '').toLowerCase() === 'returned' ? (
                         <span className="orders-table__muted">Already returned</span>
                       ) : (
-                        <button
+                        <Button
                           type="button"
-                          className="admin-secondary"
+                          variant="outlined"
+                          size="small"
                           onClick={() => handleReturnOrder(order.id)}
                           disabled={placingOrder || returningOrderId === order.id}
+                          sx={{
+                            fontFamily: '"Space Mono", monospace',
+                            fontSize: '10px',
+                            letterSpacing: '0.08em',
+                            borderColor: 'rgba(0, 0, 0, 0.3)',
+                            color: '#333333',
+                            '&:hover': { borderColor: '#111111', backgroundColor: 'rgba(0, 0, 0, 0.03)' },
+                          }}
                         >
                           {returningOrderId === order.id ? 'Returning...' : 'Return'}
-                        </button>
+                        </Button>
                       )}
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </TableBody>
+            </Table>
+          </TableContainer>
         )}
       </section>
     </main>

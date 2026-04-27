@@ -5,6 +5,16 @@ import AdminImageInputRow from '../components/admin/AdminImageInputRow.jsx';
 import AdminSizeQuantities from '../components/admin/AdminSizeQuantities.jsx';
 import AdminProductListItem from '../components/admin/AdminProductListItem.jsx';
 import Button from '@mui/material/Button';
+import FormControl from '@mui/material/FormControl';
+import MenuItem from '@mui/material/MenuItem';
+import Paper from '@mui/material/Paper';
+import Select from '@mui/material/Select';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
 
 const SIZE_OPTIONS = ['XS', 'S', 'M', 'L', 'XL'];
 const ORDER_STATUS_OPTIONS = [
@@ -57,7 +67,15 @@ function getTotalStock(sizeQuantities) {
 
 function isValidImageReference(value) {
   if (!value) return true;
-  return value.startsWith('http://') || value.startsWith('https://') || value.startsWith('data:image/');
+
+  const normalized = String(value).trim();
+
+  // Support seeded/local assets (e.g. /images/products/foo.jpg or ./images/foo.png)
+  if (normalized.startsWith('/')) return true;
+  if (normalized.startsWith('./') || normalized.startsWith('../')) return true;
+  if (/^[a-zA-Z0-9_-]+\/(?:[a-zA-Z0-9_.-]+\/)*[a-zA-Z0-9_.-]+$/.test(normalized)) return true;
+
+  return normalized.startsWith('http://') || normalized.startsWith('https://') || normalized.startsWith('data:image/');
 }
 
 function validateForm(form) {
@@ -87,7 +105,7 @@ function validateForm(form) {
 
   normalizedImages.forEach((imageRef, index) => {
     if (!isValidImageReference(imageRef)) {
-      fieldErrors.image_urls[index] = 'Use an http(s) URL or a data:image upload.';
+      fieldErrors.image_urls[index] = 'Use an http(s) URL, local image path, or data:image upload.';
       return;
     }
 
@@ -98,7 +116,7 @@ function validateForm(form) {
 
   const normalizedPrimaryImage = form.image_url.trim();
   if (!isValidImageReference(normalizedPrimaryImage)) {
-    fieldErrors.image_url = 'Primary image must be an http(s) URL or data:image upload.';
+    fieldErrors.image_url = 'Primary image must be an http(s) URL, local image path, or data:image upload.';
   }
 
   SIZE_OPTIONS.forEach((size) => {
@@ -515,7 +533,7 @@ function AdminDashboard() {
           <div className="admin-panel__header">
             <h2>{form.id ? `Edit Product #${form.id}` : 'Add Product'}</h2>
             {form.id && (
-              <Button variant="outlined" onClick={resetForm} sx={{ fontFamily: '"Space Mono", monospace' }}>
+              <Button variant="outlined" size="small" onClick={resetForm} sx={{ fontFamily: '"Space Mono", monospace', fontSize: '10px', letterSpacing: '0.08em' }}>
                 New Product
               </Button>
             )}
@@ -610,9 +628,10 @@ function AdminDashboard() {
               <Button
                 type="button"
                 variant="outlined"
+                size="small"
                 onClick={addImageInput}
                 disabled={form.image_urls.length >= MAX_IMAGES}
-                sx={{ fontFamily: '"Space Mono", monospace' }}
+                sx={{ fontFamily: '"Space Mono", monospace', fontSize: '10px', letterSpacing: '0.08em' }}
               >
                 Add Another Photo
               </Button>
@@ -632,9 +651,10 @@ function AdminDashboard() {
             <Button
               className="admin-primary"
               variant="contained"
+              size="small"
               type="submit"
               disabled={saving}
-              sx={{ fontFamily: '"Space Mono", monospace', backgroundColor: '#111111', '&:hover': { backgroundColor: '#111111' } }}
+              sx={{ fontFamily: '"Space Mono", monospace', fontSize: '10px', letterSpacing: '0.08em', backgroundColor: '#111111', '&:hover': { backgroundColor: '#111111' } }}
             >
               {saving ? 'Saving...' : form.id ? 'Save Product' : 'Create Product'}
             </Button>
@@ -664,7 +684,7 @@ function AdminDashboard() {
         </article>
       </section>
 
-      <section className="admin-panel admin-panel--orders" style={{ marginTop: 14 }}>
+      <section className="admin-panel admin-panel--orders admin-panel--spaced">
         <div className="admin-panel__header">
           <h2>Categories</h2>
           <p>{`${categories.length} total`}</p>
@@ -674,13 +694,13 @@ function AdminDashboard() {
           {categories.length === 0 ? (
             <p className="admin-empty">No categories found.</p>
           ) : (
-            <div className="admin-products-list" style={{ borderTop: '0.5px solid rgba(0, 0, 0, 0.12)' }}>
+            <div className="admin-products-list admin-products-list--framed">
               {categories.map((category) => {
                 const isEditing = editingCategoryId === category.id;
                 const isUpdating = updatingCategoryId === category.id;
                 return (
                   <div key={category.id} className="admin-product-item">
-                    <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="admin-category-item__content">
                       <div className="admin-product-item__name">
                         {isEditing ? (
                           <input
@@ -690,7 +710,7 @@ function AdminDashboard() {
                             maxLength={80}
                             disabled={isUpdating}
                             aria-label={`Edit category ${category.id}`}
-                            style={{ width: '100%' }}
+                            className="admin-category-input"
                           />
                         ) : (
                           category.name
@@ -705,18 +725,20 @@ function AdminDashboard() {
                           <Button
                             type="button"
                             variant="contained"
+                            size="small"
                             onClick={() => handleUpdateCategory(category.id)}
                             disabled={isUpdating}
-                            sx={{ fontFamily: '"Space Mono", monospace', backgroundColor: '#111111', '&:hover': { backgroundColor: '#111111' } }}
+                            sx={{ fontFamily: '"Space Mono", monospace', fontSize: '10px', letterSpacing: '0.08em', backgroundColor: '#111111', '&:hover': { backgroundColor: '#111111' } }}
                           >
                             {isUpdating ? 'Saving...' : 'Save'}
                           </Button>
                           <Button
                             type="button"
                             variant="outlined"
+                            size="small"
                             onClick={cancelEditCategory}
                             disabled={isUpdating}
-                            sx={{ fontFamily: '"Space Mono", monospace' }}
+                            sx={{ fontFamily: '"Space Mono", monospace', fontSize: '10px', letterSpacing: '0.08em' }}
                           >
                             Cancel
                           </Button>
@@ -725,8 +747,9 @@ function AdminDashboard() {
                         <Button
                           type="button"
                           variant="outlined"
+                          size="small"
                           onClick={() => startEditCategory(category)}
-                          sx={{ fontFamily: '"Space Mono", monospace' }}
+                          sx={{ fontFamily: '"Space Mono", monospace', fontSize: '10px', letterSpacing: '0.08em' }}
                         >
                           Edit
                         </Button>
@@ -738,7 +761,7 @@ function AdminDashboard() {
             </div>
           )}
 
-          <form onSubmit={handleCreateCategory} style={{ display: 'grid', gap: 12 }}>
+          <form onSubmit={handleCreateCategory} className="admin-category-form">
             <label>
               Add New Category
               <input
@@ -755,9 +778,10 @@ function AdminDashboard() {
             <Button
               className="admin-primary"
               variant="contained"
+              size="small"
               type="submit"
               disabled={creatingCategory}
-              sx={{ fontFamily: '"Space Mono", monospace', backgroundColor: '#111111', '&:hover': { backgroundColor: '#111111' } }}
+              sx={{ fontFamily: '"Space Mono", monospace', fontSize: '10px', letterSpacing: '0.08em', backgroundColor: '#111111', '&:hover': { backgroundColor: '#111111' } }}
             >
               {creatingCategory ? 'Creating...' : 'Create Category'}
             </Button>
@@ -774,48 +798,51 @@ function AdminDashboard() {
         {orders.length === 0 && !ordersLoading ? (
           <p className="admin-empty">No orders found.</p>
         ) : (
-          <div className="orders-table-wrap">
-            <table className="orders-table">
-              <thead>
-                <tr>
-                  <th>Order #</th>
-                  <th>User</th>
-                  <th>Status</th>
-                  <th>Total</th>
-                  <th>Items</th>
-                  <th>Update</th>
-                </tr>
-              </thead>
-              <tbody>
+          <TableContainer component={Paper} sx={{ border: '0.5px solid rgba(0, 0, 0, 0.12)', borderRadius: '10px', boxShadow: 'none' }}>
+            <Table size="small" aria-label="admin orders table">
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ fontFamily: '"Space Mono", monospace', fontSize: '10px', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Order #</TableCell>
+                  <TableCell sx={{ fontFamily: '"Space Mono", monospace', fontSize: '10px', letterSpacing: '0.08em', textTransform: 'uppercase' }}>User</TableCell>
+                  <TableCell sx={{ fontFamily: '"Space Mono", monospace', fontSize: '10px', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Status</TableCell>
+                  <TableCell sx={{ fontFamily: '"Space Mono", monospace', fontSize: '10px', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Total</TableCell>
+                  <TableCell sx={{ fontFamily: '"Space Mono", monospace', fontSize: '10px', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Items</TableCell>
+                  <TableCell sx={{ fontFamily: '"Space Mono", monospace', fontSize: '10px', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Update</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
                 {orders.map((order) => (
-                  <tr key={order.id}>
-                    <td>{order.id}</td>
-                    <td>{order.user_id}</td>
-                    <td>{order.status_label || getOrderStatusLabel(order.status)}</td>
-                    <td>${Number(order.total_amount || 0).toFixed(2)}</td>
-                    <td>
+                  <TableRow key={order.id} hover>
+                    <TableCell>{order.id}</TableCell>
+                    <TableCell>{order.user_id}</TableCell>
+                    <TableCell>{order.status_label || getOrderStatusLabel(order.status)}</TableCell>
+                    <TableCell>${Number(order.total_amount || 0).toFixed(2)}</TableCell>
+                    <TableCell>
                       {(order.items || []).map((item) => (
                         <div key={item.id} className="orders-table__detail">
                           {item.product_name} ({item.size || 'M'}) × {item.quantity}
                         </div>
                       ))}
-                    </td>
-                    <td>
-                      <select
-                        value={order.status || 'placed'}
-                        onChange={(event) => handleUpdateOrderStatus(order.id, event.target.value)}
-                        disabled={updatingOrderId === order.id}
-                      >
-                        {ORDER_STATUS_OPTIONS.map((option) => (
-                          <option key={option.value} value={option.value}>{option.label}</option>
-                        ))}
-                      </select>
-                    </td>
-                  </tr>
+                    </TableCell>
+                    <TableCell>
+                      <FormControl size="small" sx={{ minWidth: 180 }}>
+                        <Select
+                          value={order.status || 'placed'}
+                          onChange={(event) => handleUpdateOrderStatus(order.id, event.target.value)}
+                          disabled={updatingOrderId === order.id}
+                          sx={{ fontFamily: '"Space Mono", monospace', fontSize: '12px' }}
+                        >
+                          {ORDER_STATUS_OPTIONS.map((option) => (
+                            <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </TableBody>
+            </Table>
+          </TableContainer>
         )}
       </section>
     </main>

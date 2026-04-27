@@ -339,7 +339,7 @@ export async function initDatabase() {
       price: 59.99,
       image_url: '/images/products/product-3.jpg',
       image_urls: ['/images/products/product-3.jpg'],
-      size_quantities: { XS: 5, S: 9, M: 12, L: 9, XL: 5 },
+      size_quantities: { XS: 0, S: 0, M: 0, L: 0, XL: 0 },
     },
     {
       id: 4,
@@ -435,7 +435,13 @@ function normalizeProductPayload(body) {
   const maxPrice = 100000;
   const maxPerSizeQuantity = 9999;
   const maxTotalStock = 50000;
-  const imagePattern = /^(https?:\/\/|data:image\/)/i;
+  const remoteImagePattern = /^(https?:\/\/|data:image\/)/i;
+  const localImagePattern = /^(\/|\.\/|\.\.\/|[a-zA-Z0-9_-]+\/(?:[a-zA-Z0-9_.-]+\/)*[a-zA-Z0-9_.-]+$)/;
+
+  const isValidImageReference = (value) => {
+    if (!value) return true;
+    return remoteImagePattern.test(value) || localImagePattern.test(value);
+  };
 
   if (!body || typeof body !== 'object' || Array.isArray(body)) {
     const err = new Error('Request body must be a valid product object');
@@ -480,8 +486,8 @@ function normalizeProductPayload(body) {
 
   let image_url = body.image_url ? String(body.image_url).trim() : '';
   if (image_url) {
-    if (!imagePattern.test(image_url)) {
-      const err = new Error('Primary image must be an http(s) URL or data:image reference');
+    if (!isValidImageReference(image_url)) {
+      const err = new Error('Primary image must be an http(s) URL, local image path, or data:image reference');
       err.status = 400;
       throw err;
     }
@@ -504,8 +510,8 @@ function normalizeProductPayload(body) {
   }
 
   image_urls.forEach((imageRef, index) => {
-    if (!imagePattern.test(imageRef)) {
-      const err = new Error(`Gallery image at index ${index} must be an http(s) URL or data:image reference`);
+    if (!isValidImageReference(imageRef)) {
+      const err = new Error(`Gallery image at index ${index} must be an http(s) URL, local image path, or data:image reference`);
       err.status = 400;
       throw err;
     }
