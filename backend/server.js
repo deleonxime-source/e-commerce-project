@@ -339,7 +339,7 @@ export async function initDatabase() {
       price: 59.99,
       image_url: '/images/products/product-3.jpg',
       image_urls: ['/images/products/product-3.jpg'],
-      size_quantities: { XS: 5, S: 9, M: 12, L: 9, XL: 5 },
+      size_quantities: { XS: 0, S: 0, M: 0, L: 0, XL: 0 },
     },
     {
       id: 4,
@@ -435,7 +435,13 @@ function normalizeProductPayload(body) {
   const maxPrice = 100000;
   const maxPerSizeQuantity = 9999;
   const maxTotalStock = 50000;
-  const imagePattern = /^(https?:\/\/|data:image\/)/i;
+  const remoteImagePattern = /^(https?:\/\/|data:image\/)/i;
+  const localImagePattern = /^(\/|\.\/|\.\.\/|[a-zA-Z0-9_-]+\/(?:[a-zA-Z0-9_.-]+\/)*[a-zA-Z0-9_.-]+$)/;
+
+  const isValidImageReference = (value) => {
+    if (!value) return true;
+    return remoteImagePattern.test(value) || localImagePattern.test(value);
+  };
 
   if (!body || typeof body !== 'object' || Array.isArray(body)) {
     const err = new Error('Request body must be a valid product object');
@@ -480,8 +486,8 @@ function normalizeProductPayload(body) {
 
   let image_url = body.image_url ? String(body.image_url).trim() : '';
   if (image_url) {
-    if (!imagePattern.test(image_url)) {
-      const err = new Error('Primary image must be an http(s) URL or data:image reference');
+    if (!isValidImageReference(image_url)) {
+      const err = new Error('Primary image must be an http(s) URL, local image path, or data:image reference');
       err.status = 400;
       throw err;
     }
@@ -504,8 +510,8 @@ function normalizeProductPayload(body) {
   }
 
   image_urls.forEach((imageRef, index) => {
-    if (!imagePattern.test(imageRef)) {
-      const err = new Error(`Gallery image at index ${index} must be an http(s) URL or data:image reference`);
+    if (!isValidImageReference(imageRef)) {
+      const err = new Error(`Gallery image at index ${index} must be an http(s) URL, local image path, or data:image reference`);
       err.status = 400;
       throw err;
     }
@@ -1214,6 +1220,68 @@ app.get('/api/categories', async (req, res, next) => {
     if (err?.original?.code === '42P01') {
       return res.json([]);
     }
+    next(err);
+  }
+});
+
+app.post('/api/categories', authMiddleware, requireAdminRole, async (req, res, next) => {
+  try {
+    const rawName = String(req.body?.name || '').trim();
+    if (!rawName) {
+      return res.status(400).json({ message: 'Category name is required' });
+    }
+    if (rawName.length > 80) {
+      return res.status(400).json({ message: 'Category name must be 80 characters or fewer' });
+    }
+
+    const name = rawName.toLowerCase();
+
+    const result = await query(
+      `INSERT INTO categories (name)
+       VALUES ($1)
+       ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+       RETURNING *`,
+      [name]
+    );
+
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.put('/api/categories/:id', authMiddleware, requireAdminRole, async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id < 1) {
+      return res.status(400).json({ message: 'Valid category id is required' });
+    }
+
+    const rawName = String(req.body?.name || '').trim();
+    if (!rawName) {
+      return res.status(400).json({ message: 'Category name is required' });
+    }
+    if (rawName.length > 80) {
+      return res.status(400).json({ message: 'Category name must be 80 characters or fewer' });
+    }
+
+    const name = rawName.toLowerCase();
+
+    const existing = await query('SELECT id FROM categories WHERE id = $1', [id]);
+    if (!existing.rows.length) {
+      return res.status(404).json({ message: 'Category not found' });
+    }
+
+    const result = await query(
+      `UPDATE categories
+       SET name = $1
+       WHERE id = $2
+       RETURNING *`,
+      [name, id]
+    );
+
+    res.json(result.rows[0]);
+  } catch (err) {
     next(err);
   }
 });

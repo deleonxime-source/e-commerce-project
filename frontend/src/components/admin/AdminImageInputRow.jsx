@@ -1,3 +1,5 @@
+import Button from '@mui/material/Button';
+
 function AdminImageInputRow({
   index,
   value,
@@ -24,14 +26,16 @@ function AdminImageInputRow({
         accept="image/*"
         onChange={(event) => onFileChange(index, event.target.files?.[0])}
       />
-      <button
+      <Button
         type="button"
-        className="admin-secondary"
+        variant="outlined"
+        size="small"
         onClick={() => onRemove(index)}
         disabled={!canRemove}
+        sx={{ fontFamily: '"Space Mono", monospace', fontSize: '10px', letterSpacing: '0.08em' }}
       >
         Remove
-      </button>
+      </Button>
     </div>
   );
 }
