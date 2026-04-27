@@ -91,7 +91,7 @@ function Header() {
         <Link to="/" className="navbar__wordmark">
           CORPS <span className="diamond">◆</span> OBJECT
         </Link>
-        <span className="navbar__ref">E-commerce project</span>
+        <span className="navbar__ref">E-Commerce Website</span>
       </div>
 
       <nav className="navbar__nav">
