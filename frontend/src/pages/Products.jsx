@@ -1,11 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api/api.js';
-import { useIsAdmin } from '../hooks/useIsAdmin.js';
-import AnnouncementBar from '../components/home/AnnouncementBar.jsx';
-import CategoryFilter from '../components/home/CategoryFilter.jsx';
 import ProductCard from '../components/products/ProductCard.jsx';
-import EditorialBlock from "../components/home/EditorialBlock";
+import CategoryFilter from '../components/home/CategoryFilter.jsx';
+import AnnouncementBar from '../components/home/AnnouncementBar.jsx';
 
 const ANNOUNCEMENT_ITEMS = [
   'Free shipping over $300',
@@ -13,12 +11,11 @@ const ANNOUNCEMENT_ITEMS = [
   'Returns within 30 days',
 ];
 
-function Storefront() {
+function Products() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [loading, setLoading] = useState(true);
-  const isAdmin = useIsAdmin();
 
   const fetchProducts = async () => {
     try {
@@ -48,54 +45,26 @@ function Storefront() {
   }, []);
 
   const filteredProducts = selectedCategory
-    ? products.filter((p) => Number(p.category_id) === Number(selectedCategory))
+    ? products.filter((p) => p.category_id === selectedCategory)
     : products;
 
   return (
     <main className="body">
-<section className="hero">
-  <div className="hero__editorial">
-    <img
-      className="hero__video"
-      src="/videos/hero.gif"
-      alt="Hero"
-    />
 
-    <div className="hero__content">
-      <div className="hero__group">
+      <div className="products-header">
         <div>
-          <p className="hero__season">S/S 2026</p>
-          <h1 className="hero__headline">
-            CORPS
-            <span className="diamond">◆</span>
-            OBJECT
-          </h1>
+          <p className="products-header__eyebrow">SS — 2026</p>
+          <h1 className="products-header__title">All Products</h1>
         </div>
-
-        <div>
-          <p className="hero__collection-label">SHOP NEW COLLECTION</p>
-
-          <div className="hero__actions">
-            <Link to="/products" className="hero__cta">
-              <span>EXPLORE</span>
-              <span className="arrow">→</span>
-            </Link>
-
-            {isAdmin && (
-              <Link to="/admin" className="hero__cta">
-                <span>Admin</span>
-                <span className="arrow">→</span>
-              </Link>
-            )}
-          </div>
+        <div className="products-header__meta">
+          <span className="products-header__sort">Newest ▾</span>
+          <span className="products-header__sep">|</span>
+          <span className="products-header__count">
+            {filteredProducts.length} pieces
+          </span>
         </div>
       </div>
-    </div>
-  </div>
-</section>
 
-
-      <AnnouncementBar items={ANNOUNCEMENT_ITEMS} />
       <CategoryFilter
         categories={categories}
         selectedCategory={selectedCategory}
@@ -106,16 +75,20 @@ function Storefront() {
         {loading && (
           <p className="grid-message">Loading...</p>
         )}
+
         {!loading && filteredProducts.length === 0 && (
           <p className="grid-message">No products found.</p>
         )}
+
         {!loading && filteredProducts.map((product, index) => (
           <ProductCard key={product.id} product={product} index={index} />
         ))}
       </section>
-      <EditorialBlock />
+
+      <AnnouncementBar items={ANNOUNCEMENT_ITEMS} />
+
     </main>
   );
 }
 
-export default Storefront;
+export default Products;
