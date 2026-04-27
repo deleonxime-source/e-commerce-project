@@ -359,7 +359,7 @@ export async function initDatabase() {
       price: 85.99,
       image_url: '/images/products/product-5.jpg',
       image_urls: ['/images/products/product-5.jpg'],
-      size_quantities: { XS: 3, S: , M: 6, L: 9, XL: 4 },
+      size_quantities: { XS: 3, S: 2, M: 6, L: 9, XL: 4 },
     },
     {
       id: 6,
