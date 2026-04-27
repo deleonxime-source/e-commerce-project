@@ -44,9 +44,8 @@ function Products() {
     fetchCategories();
   }, []);
 
-const featuredProducts = products.slice(0, 4);
 const filteredProducts = selectedCategory
-  ? featuredProducts.filter(
+  ? products.filter(
       (p) => Number(p.category_id) === Number(selectedCategory)
     )
   : products;
