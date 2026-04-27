@@ -44,16 +44,19 @@ function Products() {
     fetchCategories();
   }, []);
 
-  const filteredProducts = selectedCategory
-    ? products.filter((p) => p.category_id === selectedCategory)
-    : products;
+const featuredProducts = products.slice(0, 4);
+const filteredProducts = selectedCategory
+  ? featuredProducts.filter(
+      (p) => Number(p.category_id) === Number(selectedCategory)
+    )
+  : products;
 
   return (
     <main className="body">
 
       <div className="products-header">
         <div>
-          <p className="products-header__eyebrow">SS — 2026</p>
+          <p className="products-header__eyebrow">S/S — 2026</p>
           <h1 className="products-header__title">All Products</h1>
         </div>
         <div className="products-header__meta">
