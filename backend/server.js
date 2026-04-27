@@ -314,7 +314,7 @@ export async function initDatabase() {
     {
       id: 1,
       name: 'Classic White Tee',
-      category_name: 'shirt',
+      category_name: 'shirts',
       description: 'Soft cotton T-shirt with a clean crewneck.',
       price: 24.99,
       image_url: '/images/products/product-1.jpg',
@@ -344,7 +344,7 @@ export async function initDatabase() {
     {
       id: 4,
       name: 'Long Sleeve Sweater',
-      category_name: 'shirt',
+      category_name: 'tops',
       description: 'Cozy sweater with a relaxed fit.',
       price: 79.99,
       image_url: '/images/products/product-4.jpg',
@@ -394,7 +394,7 @@ export async function initDatabase() {
     {
       id: 9,
       name: 'Sleveless Cami Top',
-      category_name: 'shirt',
+      category_name: 'tops',
       description: 'Block printe tee shirt.',
       price: 99.99,
       image_url: '/images/products/product-9.jpg',
@@ -424,7 +424,7 @@ export async function initDatabase() {
   {
           id: 12,
       name: 'Drapped Sheer Top',
-      category_name: 'shirt',
+      category_name: 'tops',
       description:'Sheer draped top with a flowy fit.',
       price: 100.99,
       image_url: '/images/products/product-12.jpg',
@@ -454,7 +454,7 @@ export async function initDatabase() {
   {
           id: 15,
       name: 'Distressed Sheer Top',
-      category_name: 'shirt',
+      category_name: 'tops',
       description:'Black sheer top with distressed details.',
       price: 75.99,
       image_url: '/images/products/product-15.jpg',
@@ -497,7 +497,7 @@ export async function initDatabase() {
 {
           id: 19,
       name: 'Distressed Denim Vest',
-      category_name: 'shirt',
+      category_name: 'tops',
       description:'Denim vest with distressed detailing.',
       price: 79.99,
       image_url: '/images/products/product-19.jpg',
