@@ -1441,8 +1441,8 @@ display: flex;
 
 strata-chat {           
   position: fixed;
-  bottom: 20px;
-  right: 20px;
+  bottom: 24px;
+  right: 24px;
   z-index: 9999;
 }
 .products-header__sort {
