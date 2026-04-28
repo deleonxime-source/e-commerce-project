@@ -17,7 +17,11 @@ function ensureStrataWidget() {
     }
   }
 
-  if (document.getElementById(scriptId)) {
+  const existingScript =
+    document.getElementById(scriptId) ||
+    document.querySelector('script[src="https://strata.fyi/widget.js"]');
+
+  if (existingScript) {
     appendWidget();
     return;
   }
