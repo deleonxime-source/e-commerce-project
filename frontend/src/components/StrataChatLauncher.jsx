@@ -2,25 +2,32 @@ import { useEffect, useState } from 'react';
 
 function ensureStrataWidget() {
   const scriptId = 'strata-widget-script';
-  if (!document.getElementById(scriptId)) {
-    const script = document.createElement('script');
-    script.id = scriptId;
-    script.src = 'https://strata.fyi/widget.js';
-    script.defer = true;
-    document.body.appendChild(script);
+
+  function appendWidget() {
+    if (!document.querySelector('strata-chat')) {
+      const widget = document.createElement('strata-chat');
+      widget.setAttribute('workspace', 'support-bot');
+      widget.setAttribute('title', 'Support');
+      widget.setAttribute('intro', 'Hi! How can I help you today?');
+      widget.setAttribute(
+        'pills',
+        '["Where is my order?", "Sizing help", "Return policy"]'
+      );
+      document.body.appendChild(widget);
+    }
   }
 
-  if (!document.querySelector('strata-chat')) {
-    const widget = document.createElement('strata-chat');
-    widget.setAttribute('workspace', 'support-bot');
-    widget.setAttribute('title', 'Support');
-    widget.setAttribute('intro', 'Hi! How can I help you today?');
-    widget.setAttribute(
-      'pills',
-      '["Where is my order?", "Sizing help", "Return policy"]'
-    );
-    document.body.appendChild(widget);
+  if (document.getElementById(scriptId)) {
+    appendWidget();
+    return;
   }
+
+  const script = document.createElement('script');
+  script.id = scriptId;
+  script.src = 'https://strata.fyi/widget.js';
+  script.defer = true;
+  script.onload = appendWidget;
+  document.body.appendChild(script);
 }
 
 function removeStrataWidget() {
@@ -35,9 +42,6 @@ function removeStrataWidget() {
   });
 }
 
-/**
- * Fixed side launcher for the Strata support widget.
- */
 export function StrataChatLauncher() {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -50,7 +54,6 @@ export function StrataChatLauncher() {
   useEffect(() => {
     function handleKeyDown(event) {
       if (event.key !== 'Escape') return;
-
       removeStrataWidget();
       setIsOpen(false);
     }

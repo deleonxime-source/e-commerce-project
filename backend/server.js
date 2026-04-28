@@ -334,7 +334,7 @@ export async function initDatabase() {
     {
       id: 3,
       name: 'Black Skinny Jeans',
-      category_name: 'pants',
+      category_name: 'bottoms',
       description: 'Stretch denim with a slim fit.',
       price: 59.99,
       image_url: '/images/products/product-3.jpg',
@@ -434,7 +434,7 @@ export async function initDatabase() {
 {
           id: 13,
       name: 'Printed Gray Jeans',
-      category_name: 'pants',
+      category_name: 'bottoms',
       description:'Jeans with printed graphic text.',
       price: 185.99,
       image_url: '/images/products/product-13.jpg',
@@ -475,7 +475,7 @@ export async function initDatabase() {
 {
           id: 17,
       name: 'Buckled Leather Jeans',
-      category_name: 'pants',
+      category_name: 'bottoms',
       description:'Jeans with leather buckle detailing.',
       price: 195.99,
       image_url: '/images/products/product-17.jpg',
@@ -514,6 +514,8 @@ export async function initDatabase() {
       image_urls: ['/images/products/product-20.jpg'],
       size_quantities: { XS: 10, S: 15, M: 7, L: 19, XL: 6},
 },
+
+
 
   ];
 
